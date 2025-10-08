@@ -1,0 +1,53 @@
+-- Tabel untuk menyimpan data perangkat desa.
+CREATE TABLE perangkat_desa (
+    id INTEGER NOT NULL PRIMARY KEY,
+    nama TEXT,
+    nipd TEXT,
+    kode_kec TEXT,
+    kode_desa TEXT,
+    kode_jabatan TEXT,
+    mulai TEXT,
+    berakhir TEXT,
+    nik TEXT,
+    tempat_lahir TEXT,
+    tanggal_lahir TEXT,
+    no_sk TEXT,
+    pendidikan TEXT,
+    jenis_kelamin TEXT,
+    agama TEXT,
+    no_telp TEXT,
+    status TEXT,
+    nama_jabatan TEXT
+);
+
+-- Kueri untuk memilih semua perangkat desa.
+selectAllPerangkatDesa:
+SELECT * FROM perangkat_desa WHERE kode_desa = ?;
+
+-- Kueri untuk memilih perangkat desa berdasarkan ID.
+selectPerangkatDesaById:
+SELECT * FROM perangkat_desa WHERE id = ?;
+
+-- Kueri untuk menyisipkan data perangkat desa baru.
+insertPerangkatDesa:
+INSERT INTO perangkat_desa (
+    id, nama, nipd, kode_kec, kode_desa, kode_jabatan, mulai, berakhir, nik,
+    tempat_lahir, tanggal_lahir, no_sk, pendidikan, jenis_kelamin, agama,
+    no_telp, status, nama_jabatan
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Kueri untuk memperbarui data perangkat desa.
+updatePerangkatDesa:
+UPDATE perangkat_desa
+SET id = ?, nama = ?, nipd = ?, kode_kec = ?, kode_desa = ?, kode_jabatan = ?, mulai = ?, berakhir = ?,
+    nik = ?, tempat_lahir = ?, tanggal_lahir = ?, no_sk = ?, pendidikan = ?,
+    jenis_kelamin = ?, agama = ?, no_telp = ?, status = ?, nama_jabatan = ?
+WHERE id = ?;
+
+-- Kueri untuk menghapus perangkat desa berdasarkan ID.
+deletePerangkatDesaById:
+DELETE FROM perangkat_desa WHERE id = ?;
+
+
+deleteAllPerangkatDesa:
+DELETE FROM perangkat_desa;

@@ -1,0 +1,59 @@
+-- Tabel untuk menyimpan data pengguna aplikasi.
+CREATE TABLE user (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    kode_desa TEXT NOT NULL,
+    kode_kec TEXT NOT NULL,
+    token TEXT NOT NULL,
+    mac_address TEXT
+);
+
+-- Kueri untuk memilih semua pengguna.
+selectAllUser:
+SELECT * FROM user;
+
+-- Kueri untuk memilih pengguna berdasarkan ID.
+selectUserById:
+SELECT * FROM user WHERE id = ?;
+
+-- Kueri untuk memilih pengguna berdasarkan ID dan token.
+selectUserByIdAndToken:
+SELECT * FROM user WHERE id = ? AND token = ?;
+
+-- Kueri untuk memilih pengguna berdasarkan mac_address.
+selectUserByMacAddress:
+SELECT * FROM user WHERE mac_address = ?;
+
+-- Kueri untuk menyisipkan atau mengganti pengguna baru.
+-- Jika pengguna sudah ada (berdasarkan email), data lama akan diganti dengan yang baru.
+insertUser:
+REPLACE INTO user (
+    email, name, kode_desa, kode_kec, token, mac_address
+) VALUES (?, ?, ?, ?, ?, ?);
+
+-- Kueri untuk memperbarui data pengguna.
+updateUser:
+UPDATE user
+SET name = ?, email = ?, kode_desa = ?, kode_kec = ?, token = ?, mac_address = ?
+WHERE id = ?;
+
+-- Kueri untuk memperbarui mac_address pengguna.
+updateUserMacAddress:
+UPDATE user
+SET mac_address = ?
+WHERE id = ?;
+
+-- Kueri untuk memperbarui mac_address berdasarkan kode_desa.
+updateUserMacAddressByKodeDesa:
+UPDATE user
+SET mac_address = ?
+WHERE kode_desa = ?;
+
+-- Kueri untuk menghapus pengguna berdasarkan ID.
+deleteUserById:
+DELETE FROM user WHERE id = ?;
+
+-- Kueri untuk menghapus semua pengguna dari tabel.
+deleteAllUser:
+DELETE FROM user;

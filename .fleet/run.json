@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "type": "gradle",
+            "name": "composeApp [Desktop]",
+            "tasks": [
+                "desktopRun"
+            ],
+            "args": [
+                "-DmainClass=id.go.tapselkab.sapa_desa.MainKt",
+                "--quiet",
+                "-p",
+                "C:\\PMD\\SAPA_DESA\\composeApp"
+            ],
+            "initScripts": {
+                "flmapper": "ext.mapPath = { path -> path }"
+            },
+            "workingDir": "C:\\PMD\\SAPA_DESA/"
+        }
+    ]
+}
