@@ -29,13 +29,13 @@ import java.time.LocalDate
 
 @Composable
 fun RekapAbsensiHarian(
-    userId: Int,
-    viewModel: absensiViewModel,
+    perangkatId: Int,
+    viewModel: AbsensiViewModel,
 ) {
 
     LaunchedEffect(Unit) {
         viewModel.initScreen()
-        viewModel.getAttendenceByUserAndMonth(userId = userId)
+        viewModel.getAbsensiByPerangkatAndMonth(perangkatId = perangkatId)
 
     }
 
@@ -60,8 +60,8 @@ fun RekapAbsensiHarian(
             onMonthYearSelected = { month, year ->
                 selectedMonth = month
                 selectedYear = year
-                viewModel.getUpdateabsensi(
-                    userId = userId,
+                viewModel.getAbsensiByPerangkatAndMonth(
+                    perangkatId = perangkatId,
                     month = month,
                     year = year
                 ) // Buat fungsi ini untuk update state
@@ -106,7 +106,7 @@ fun RekapAbsensiHarian(
 
             OutlinedButton(
                 onClick = {
-                    viewModel.exportabsensiToCSV(absensis)
+                    viewModel.exportAbsensi(absensis)
                 },
                 content = {
                     Text("Export")
@@ -119,7 +119,7 @@ fun RekapAbsensiHarian(
             BodyTableAbsensi(
                 absensi = it,
                 onSendabsensi = { absensi ->
-                    viewModel.sendabsensiToServer(absensi)
+                    viewModel.sendAbsensi(absensi)
                 }
             )
         }
@@ -196,14 +196,14 @@ fun BodyTableAbsensi(
                 .weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = DateManager.formatMillisToDate(absensi.date),
+            text = absensi.tanggal.orEmpty(),
             textAlign = TextAlign.Center
         )
         Text(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = attanceTextStatus(absensi = absensi.absensiMorning, date = absensi.date ?: 0),
+            text = absensi.absensiPagi.orEmpty(),
             textAlign = TextAlign.Center
         )
 
@@ -211,21 +211,21 @@ fun BodyTableAbsensi(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = if (absensi.late == null) "~" else "${absensi.late} Menit",
+            text = if (absensi.keterlambatan == null) "~" else "${absensi.keterlambatan} Menit",
             textAlign = TextAlign.Center
         )
         Text(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = attanceTextStatus(absensi = absensi.absensiAfternoon, date = absensi.date ?: 0),
+            text = absensi.absensiSore.orEmpty(),
             textAlign = TextAlign.Center
         )
         Text(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = if (absensi.early == null) "~" else "${absensi.early} Menit",
+            text = if (absensi.pulangCepat == null) "~" else "${absensi.pulangCepat} Menit",
             textAlign = TextAlign.Center
         )
 

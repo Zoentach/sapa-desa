@@ -8,12 +8,10 @@ import id.go.tapselkab.sapa_desa.ui.FlashScreen
 import id.go.tapselkab.sapa_desa.ui.perangkat.PerangkatScreen
 import id.go.tapselkab.sapa_desa.ui.dashboard.DashboardScreen
 import id.go.tapselkab.sapa_desa.ui.entity.PerangkatEntity
-import id.go.tapselkab.sapa_desa.ui.graph.CredentialLogin
-import id.go.tapselkab.sapa_desa.ui.graph.Dashboard
-import id.go.tapselkab.sapa_desa.ui.graph.FlashScreen
-import id.go.tapselkab.sapa_desa.ui.graph.Login
+import id.go.tapselkab.sapa_desa.ui.graph.*
 import id.go.tapselkab.sapa_desa.ui.login.CredentialLoginScreen
 import id.go.tapselkab.sapa_desa.ui.login.LoginScreen
+import id.go.tapselkab.sapa_desa.ui.verifikasi.VerifikasiAbsensiScreen
 
 
 fun NavGraphBuilder.flashScreen() {
@@ -69,10 +67,26 @@ fun NavGraphBuilder.dashboard() {
                     perangkat
                 )
             },
+            onNavigateToVerifikasiAbsensi = {
+                navigate.navigate(
+                    VerifikasiAbsensi
+                )
+            },
             onNavigateBack = {
                 navigate.navigateUp()
             }
         )
+    }
+}
+
+
+fun NavGraphBuilder.verifikasi() {
+    composable<VerifikasiAbsensi> {
+
+        val navigate = LocalNavigation.current
+
+        VerifikasiAbsensiScreen()
+
     }
 }
 

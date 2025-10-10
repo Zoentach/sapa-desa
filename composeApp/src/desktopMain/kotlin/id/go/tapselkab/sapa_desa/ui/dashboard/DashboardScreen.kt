@@ -40,21 +40,13 @@ fun DashboardScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val verifikasiAbsensi by viewModel.verifikasiAbsensi.collectAsState()
 
-    // var showAlertDialog by remember { mutableStateOf(false) }
+    var showAlertDialog by remember { mutableStateOf(false) }
     var verifikasiAlertDialog by remember { mutableStateOf(false) }
     var alertMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentUser()
     }
-
-//    LaunchedEffect(currentUser) {
-//        currentUser?.let {
-//            if (it.macAddress == null) {
-//                showMacAddressDialog = true
-//            }
-//        }
-//    }
 
     if (verifikasiAlertDialog) {
 
@@ -70,18 +62,18 @@ fun DashboardScreen(
         )
     }
 
-    /* if (showAlertDialog) {
+    if (showAlertDialog) {
 
-         AlertDialogCustom(
-             message = alertMessage,
-             onCancel = {
-                 showAlertDialog = false
-             },
-             onOke = {
-                 showAlertDialog = false
-             },
-         )
-     }*/
+        AlertDialogCustom(
+            message = alertMessage,
+            onCancel = {
+                showAlertDialog = false
+            },
+            onOke = {
+                showAlertDialog = false
+            },
+        )
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -98,16 +90,21 @@ fun DashboardScreen(
 
             headerDashBoard(
                 onLogOut = {
-                    currentUser?.let { user ->
-                        if (user.token == "default") {
-                            alertMessage = "Anda login dengan kredensial, keluar aplikasi tidak diperlukan"
-                            showAlertDialog = true
-                        } else {
-                            viewModel.logOut()
-                            onNavigateBack()
-                        }
-                    }
 
+                    if (currentUser != null) {
+                        currentUser?.let { user ->
+                            if (user.token == "default") {
+                                alertMessage = "Anda login dengan kredensial, keluar aplikasi tidak diperlukan"
+                                showAlertDialog = true
+                            } else {
+                                viewModel.logOut()
+                                onNavigateBack()
+                            }
+                        }
+                    } else {
+                        viewModel.logOut()
+                        onNavigateBack()
+                    }
                 },
             )
 
@@ -117,16 +114,39 @@ fun DashboardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 HeaderText(currentUser?.name ?: "")
-                BaganPerangkat(
-                    perangkats = perangkatDesa,
-                    onSelected = {
-                        if (verifikasiAbsensi != null) {
-                            onNavigateToPerangkat(it)
-                        } else {
-                            verifikasiAlertDialog = true
-                        }
+
+                if (perangkatDesa.isEmpty()) {
+                    OutlinedButton(
+                        modifier = Modifier
+                            .padding(32.dp),
+                        onClick = {
+                            onNavigateToVerifikasiAbsensi()
+
+                        },
+                    ) {
+
+                        Text(
+                            text = "Daftakan Perangkat"
+                        )
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = ""
+                        )
                     }
-                )
+                } else {
+                    BaganPerangkat(
+                        perangkats = perangkatDesa,
+                        onSelected = {
+                            if (verifikasiAbsensi != null) {
+                                onNavigateToPerangkat(it)
+                            } else {
+                                verifikasiAlertDialog = true
+                            }
+                        }
+                    )
+                }
+
             }
         }
     }
@@ -143,14 +163,7 @@ fun headerDashBoard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End
     ) {
-//        Image(
-//            modifier = Modifier
-//                .height(100.dp)
-//                .width(200.dp),
-//            painter = painterResource(Res.drawable.logo_app),
-//            contentDescription = ""
-//        )
-//        Spacer(modifier = Modifier.weight(1f))
+
         OutlinedButton(
             modifier = Modifier
                 .padding(32.dp),
@@ -184,8 +197,8 @@ fun HeaderText(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Sistem Absensi Perangkat Desa".uppercase(),
-            fontSize = 28.sp,
+            text = "Sistem Absensi".uppercase(),
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2C3E50),
             letterSpacing = 1.2.sp,

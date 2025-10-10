@@ -28,13 +28,12 @@ import org.koin.compose.koinInject
 
 @Composable
 fun PerangkatScreen(
-    absensiViewModel: absensiViewModel = koinInject(),
+    absensiViewModel: AbsensiViewModel = koinInject(),
     perangkat: PerangkatEntity?,
     onNavigateBack: () -> Unit
 ) {
 
-    val absensiStatus by absensiViewModel.absensiStatus.collectAsState()
-
+    val absensiResult by absensiViewModel.absensiResult.collectAsState()
 
     // val cameraAvailableIndex by remember { mutableStateOf(CameraManager.findAvailableCameraIndex()) }
 
@@ -44,8 +43,8 @@ fun PerangkatScreen(
 
     var absensiMessage by remember { mutableStateOf("Belum Absen") }
 
-    LaunchedEffect(absensiStatus) {
-        absensiMessage = absensiStatus.message
+    LaunchedEffect(absensiResult) {
+        absensiMessage = absensiResult.message
     }
 
     if (showCameraFaceRef) {
@@ -79,9 +78,7 @@ fun PerangkatScreen(
                     CameraManager.releaseCamera()
                     showCamereAbsensi = false
                     absensiViewModel.prosesAbsensi(
-                        userId = perangkat?.id ?: 0,
-                        kodeDesa = perangkat?.kodeDesa ?: "",
-                        kodeKec = perangkat?.kodeKec ?: "",
+                        perangkatId = perangkat?.id ?: 0,
                         timeStamp = timeStamp ?: 0
                     )
                 }
@@ -147,7 +144,7 @@ fun PerangkatScreen(
 
 
             RekapAbsensiHarian(
-                userId = perangkat?.id ?: 0,
+                perangkatId = perangkat?.id ?: 0,
                 viewModel = absensiViewModel
             )
         }
@@ -177,14 +174,11 @@ fun PerangkatScreen(
 @Composable
 fun absensiButton(
     modifier: Modifier = Modifier,
-    viewModel: absensiViewModel,
+    viewModel: AbsensiViewModel,
     onClick: () -> Unit,
 ) {
 
     val buttonStatus by viewModel.buttonStatus.collectAsState()
-    LaunchedEffect(Unit) {
-        viewModel.isMorningOrAfternoon()
-    }
 
     val date by viewModel.thisDay.collectAsState()
     LaunchedEffect(Unit) {

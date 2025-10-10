@@ -4,6 +4,7 @@ import id.go.tapselkab.database.sipature_db
 import id.go.tapselkab.sapa_desa.core.data.network.AuthApiService
 import id.go.tapselkab.sapa_desa.core.data.token.TokenStorage
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
+import id.go.tapselkab.sapa_desa.ui.entity.UserEntity
 import id.go.tapselkab.sapa_desa.ui.entity.toRequest
 import id.go.tapselkab.sapa_desa.utils.time.DateUtils
 import java.io.File
@@ -12,7 +13,6 @@ import java.lang.Exception
 class AbsensiRepository(
     private val api: AuthApiService,
     private val db: sipature_db,
-    private val tokenStorage: TokenStorage
 ) {
 
     suspend fun sendAbsensiToServer(
@@ -20,13 +20,12 @@ class AbsensiRepository(
         gambarPagi: File?,
         gambarSore: File?
     ): Boolean {
-        return try {
-            val token = tokenStorage.get()
 
-            if (token.isNullOrBlank()) {
-                println("User fetch failed: Token tidak tersedia")
-                return false
-            }
+        val user = getCurrentUser()
+
+        val token = user?.token ?: ""
+
+        return try {
             api.insertAbsensiWithImages(
                 token = token,
                 absensi = absensi.toRequest(),
@@ -40,22 +39,18 @@ class AbsensiRepository(
 
     fun insertAbsensi(
         perangkatId: Long,
-        tanggal: Long,
-        pagi: Long?,
-        sore: Long?,
+        tanggal: String,
+        pagi: String?,
+        sore: String?,
         keterlambatan: Long?,
         pulangCepat: Long?,
         syncStatus: Long
     ) {
-        val stringTanggal = DateUtils.toDateString(tanggal)
-        val stringPagi = if (pagi != null) DateUtils.toTimeString(pagi) else null
-        val stringSore = if (sore != null) DateUtils.toTimeString(sore) else null
-
         db.absensiQueries.insertAbsensi(
             perangkat_id = perangkatId,
-            tanggal = stringTanggal,
-            absensi_pagi = stringPagi,
-            absensi_sore = stringSore,
+            tanggal = tanggal,
+            absensi_pagi = pagi,
+            absensi_sore = sore,
             keterlambatan = keterlambatan,
             pulang_cepat = pulangCepat,
             sync_status = syncStatus,
@@ -65,51 +60,48 @@ class AbsensiRepository(
     }
 
     fun updateAfternoonAbsensi(
-        tanggal: Long,
+        tanggal: String,
         perangkatId: Long,
-        sore: Long?,
+        sore: String,
         pulangCepat: Long?,
         syncStatus: Long
     ) {
-        val stringSore = if (sore != null) DateUtils.toTimeString(sore) else null
-        val stringTanggal = DateUtils.toDateString(tanggal)
 
         db.absensiQueries.updateAbsensiAfternoonByUserAndDate(
-            absensi_sore = stringSore,
+            absensi_sore = sore,
             pulang_cepat = pulangCepat,
             sync_status = syncStatus,
             perangkat_id = perangkatId,
-            tanggal = stringTanggal
+            tanggal = tanggal
         )
     }
 
     fun updateAbsensiSyncStatus(
         perangkatId: Long,
-        tanggal: Long,
+        tanggal: String,
         syncStatus: Long
     ) {
 
-        val stringTanggal = DateUtils.toDateString(tanggal)
-
+        //val stringTanggal = DateUtils.toDateString(tanggal)
         db.absensiQueries.updateAbsensiSyncStatus(
             sync_status = syncStatus,
             perangkat_id = perangkatId,
-            tanggal = stringTanggal
+            tanggal = tanggal
         )
     }
 
-//    fun isAbsensiExist(userId: Long, date: Long?): Boolean {
-//        val count = db.absensiQueries.selectByDate(
-//            tanggal = date,
-//            perangkat_id = userId
-//        ).executeAsOne()
-//
-//        return count > 0
-//    }
+    fun isAbsensiExist(perangkatId: Long, tanggal: String): Boolean {
+        val count = db.absensiQueries.selectByDate(
+            tanggal = tanggal,
+            perangkat_id = perangkatId
+        ).executeAsOne()
 
-//    fun deleteAbsensiById(id: Long) {
-//        db.absensiQueries.deleteAbsensiById(id)
-//    }
+        return count > 0
+    }
+
+    fun deleteAbsensiById(id: Long) {
+        db.absensiQueries.deleteAbsensiById(id)
+    }
 
     fun getAllAbsensi(): List<AbsensiEntity> {
         return db.absensiQueries.selectAllAbsensi().executeAsList().map { absensi ->
@@ -123,6 +115,24 @@ class AbsensiRepository(
                 pulangCepat = absensi.pulang_cepat?.toInt(),
                 syncStatus = absensi.sync_status.toInt()
             )
+        }
+    }
+
+    suspend fun getCurrentUser(): UserEntity? {
+        return try {
+            val generatedUser = db.userQueries.selectAllUser().executeAsOneOrNull()
+            // Konversi dari data class yang dihasilkan SQLDelight ke UserEntity
+            generatedUser?.let { user ->
+                UserEntity(
+                    id = user.id.toInt(),
+                    name = user.name,
+                    email = user.email,
+                    token = user.token
+                )
+            }
+        } catch (e: Exception) {
+            println("User fetch failed from local DB: ${e.message}")
+            null
         }
     }
 }

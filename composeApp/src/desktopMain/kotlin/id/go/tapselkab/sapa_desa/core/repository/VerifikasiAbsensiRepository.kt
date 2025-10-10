@@ -1,46 +1,56 @@
 package id.go.tapselkab.sapa_desa.core.repository
 
-
 import id.go.tapselkab.sapa_desa.core.data.network.AuthApiService
 import id.go.tapselkab.database.sipature_db
-import id.go.tapselkab.sapa_desa.ui.entity.UserEntity
 import id.go.tapselkab.sapa_desa.ui.entity.VerifikasiAbsensiEntity
 import id.go.tapselkab.sapa_desa.ui.entity.toEntity
 import id.go.tapselkab.sapa_desa.ui.entity.toModel
 
 class VerifikasiAbsensiRepository(
-    private val api: AuthApiService,
     private val db: sipature_db,
+    private val api: AuthApiService,
 ) {
-    // Ambil verifikasi berdasarkan userId
+
     suspend fun getVerifikasiAbsensi(userId: Long, token: String): VerifikasiAbsensiEntity? {
         return try {
 
-            // Ambil dari lokal terlebih dahulu
+            if (token.isNullOrBlank() || userId == null) {
+                println("VerifikasiAbsensi fetch failed: Token atau User ID tidak tersedia")
+                return null
+            }
+
+            // 1️⃣ Ambil dari lokal terlebih dahulu
             val localData = db.verifikasiAbsensiQueries
-                .selectByUserId(userId)
+                .selectVerifikasiByUserId(userId)
                 .executeAsOneOrNull()
 
             if (localData != null) {
-                // Jika data ada di lokal, langsung kembalikan
-                return localData
+                return VerifikasiAbsensiEntity(
+                    userId = localData.user_id,
+                    kodeDesa = localData.kode_desa,
+                    kodeKecamatan = localData.kode_kecamatan,
+                    macAddress = localData.mac_address,
+                    latitude = localData.latitude,
+                    longitude = localData.longitude,
+                    syncStatus = localData.sync_status
+                )
             }
 
-            //Jika lokal kosong, ambil dari server
+            // Jika lokal kosong, ambil dari server
             val remoteData = api.getVerifikasiAbsensi(token)
 
             if (remoteData != null) {
                 val entity = remoteData.firstOrNull()?.toEntity(1)
 
                 // Simpan ke lokal
-                db.verifikasiAbsensiQueries.insertOrReplace(
+                db.verifikasiAbsensiQueries.insertOrReplaceVerifikasi(
                     user_id = entity?.userId,
-                    kode_desa = entity?.kodeDesa,
-                    kode_kecamatan = entity?.kodeKecamatan,
+                    kode_desa = entity?.kodeDesa ?: "",
+                    kode_kecamatan = entity?.kodeKecamatan ?: "",
                     mac_address = entity?.macAddress,
                     latitude = entity?.latitude,
                     longitude = entity?.longitude,
-                    syncStatus = 1
+                    sync_status = 1 // karena sudah sinkron dari server
                 )
 
                 // Kembalikan data yang baru disimpan
@@ -51,7 +61,7 @@ class VerifikasiAbsensiRepository(
             null
 
         } catch (e: Exception) {
-            println("Gagal mengambil VerifikasiAbsensi: ${e.message}")
+            println("⚠️ Gagal mengambil VerifikasiAbsensi: ${e.message}")
             null
         }
     }
@@ -69,7 +79,7 @@ class VerifikasiAbsensiRepository(
 
             if (response) {
                 db.verifikasiAbsensiQueries.updateSyncStatusByUserId(
-                    syncStatus = 1,
+                    sync_status = 1,
                     user_id = verifikasi.userId
                 )
                 true
@@ -84,42 +94,22 @@ class VerifikasiAbsensiRepository(
 
     // Simpan / perbarui lokal
     suspend fun saveLocal(verifikasi: VerifikasiAbsensiEntity) {
-        db.verifikasiAbsensiQueries.insertOrReplace(
+        db.verifikasiAbsensiQueries.insertOrReplaceVerifikasi(
             user_id = verifikasi.userId,
             kode_desa = verifikasi.kodeDesa,
             kode_kecamatan = verifikasi.kodeKecamatan,
             mac_address = verifikasi.macAddress,
             latitude = verifikasi.latitude,
             longitude = verifikasi.longitude,
-            syncStatus = verifikasi.syncStatus
+            sync_status = verifikasi.syncStatus
         )
     }
 
     suspend fun deleteByUserId(userId: Long) {
-        db.verifikasiAbsensiQueries.deleteByUserId(userId)
+        db.verifikasiAbsensiQueries.deleteVerifikasiByUserId(userId)
     }
 
     suspend fun deleteAll() {
-        db.verifikasiAbsensiQueries.deleteAll()
-    }
-
-    suspend fun getCurrentUser(): UserEntity? {
-        return try {
-            val generatedUser = db.userQueries
-                .selectAllUser()
-                .executeAsOneOrNull()
-            // Konversi dari data class yang dihasilkan SQLDelight ke UserEntity
-            generatedUser?.let { user ->
-                UserEntity(
-                    id = user.id.toInt(),
-                    name = user.name,
-                    email = user.email,
-                    token = user.token
-                )
-            }
-        } catch (e: Exception) {
-            println("User fetch failed from local DB: ${e.message}")
-            null
-        }
+        db.verifikasiAbsensiQueries.deleteAllVerifikasiAbsensi()
     }
 }

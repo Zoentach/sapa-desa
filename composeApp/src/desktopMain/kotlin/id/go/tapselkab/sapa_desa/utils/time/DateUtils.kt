@@ -49,4 +49,13 @@ object DateUtils {
         val instant = today.atTime(localTime).atZone(ZoneId.systemDefault()).toInstant()
         return instant.toEpochMilli()
     }
+
+    fun isWithinMonth(dateString: String, month: Int, year: Int): Boolean {
+        return try {
+            val date = LocalDate.parse(dateString)
+            date.month.value == month && date.year == year
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

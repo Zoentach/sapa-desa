@@ -15,4 +15,7 @@ object CredentialLogin
 @Serializable
 object Dashboard
 
+@Serializable
+object VerifikasiAbsensi
+
 //navigasi

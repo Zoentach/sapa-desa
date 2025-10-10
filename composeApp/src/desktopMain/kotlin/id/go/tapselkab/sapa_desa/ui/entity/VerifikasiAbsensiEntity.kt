@@ -1,5 +1,6 @@
 package id.go.tapselkab.sapa_desa.ui.entity
 
+
 import id.go.tapselkab.sapa_desa.core.data.local.model.VerifikasiAbsensiModel
 
 data class VerifikasiAbsensiEntity(

@@ -54,7 +54,7 @@ fun PerangkatModel.toDbObject(): PerangkatDesa {
         agama = this.agama,
         no_telp = this.no_telp,
         status_jabatan = this.status_jabatan,
-        status_keaktifan: this.status_keaktifan,
-    nama_jabatan = this.nama_jabatan
+        status_keaktifan = this.status_keaktifan,
+        nama_jabatan = this.nama_jabatan
     )
 }

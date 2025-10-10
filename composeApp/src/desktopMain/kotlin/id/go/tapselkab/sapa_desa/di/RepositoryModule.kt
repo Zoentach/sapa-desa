@@ -8,9 +8,8 @@ import id.go.tapselkab.sapa_desa.core.repository.VerifikasiAbsensiRepository
 import org.koin.dsl.module
 
 val repositoryModule = module {
-
     single { DatabaseImporter(get(), get(), get()) }
-    single { AbsensiRepository(get(), get(), get()) }
+    single { AbsensiRepository(get(), get()) }
     single { AuthRepository(get(), get(), get()) }
     single { DashboardRepository(get(), get()) }
     single { VerifikasiAbsensiRepository(get(), get()) }

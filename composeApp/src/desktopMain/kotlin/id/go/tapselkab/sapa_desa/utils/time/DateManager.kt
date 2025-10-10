@@ -14,6 +14,7 @@ import id.go.tapselkab.sapa_desa.utils.model.DayOfMonth
 
 object DateManager {
 
+
     fun getMillisAt0815(): Long {
         return LocalDate.now()
             .atTime(LocalTime.of(8, 0)) // jam 06:00
@@ -43,6 +44,15 @@ object DateManager {
         return try {
             val dateFormat = SimpleDateFormat("MMMM yyyy", myLocalDate())
             dateFormat.format(this)
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    fun thisMonth(): String {
+        return try {
+            val dateFormat = SimpleDateFormat("MMMM yyyy", myLocalDate())
+            dateFormat.format(myLocalDate())
         } catch (e: Exception) {
             throw e
         }

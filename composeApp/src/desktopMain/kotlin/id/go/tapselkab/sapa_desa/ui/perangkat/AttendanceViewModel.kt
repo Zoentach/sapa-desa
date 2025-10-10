@@ -1,6 +1,6 @@
 package id.go.tapselkab.sapa_desa.ui.perangkat
 
-import androidx.compose.runtime.MutableState
+/*import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import io.ktor.util.date.*
 import kotlinx.coroutines.*
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import id.go.tapselkab.sapa_desa.core.repository.AbsensiRepository
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
-import id.go.tapselkab.sapa_desa.ui.entity.absensiResult
-import id.go.tapselkab.sapa_desa.ui.entity.absensiStatus
+import id.go.tapselkab.sapa_desa.ui.entity.AbsensiResult
+import id.go.tapselkab.sapa_desa.ui.entity.AbsensiStatus
 import id.go.tapselkab.sapa_desa.ui.entity.toEntity
 import id.go.tapselkab.sapa_desa.utils.camera.FaceRecognizerManager
 import id.go.tapselkab.sapa_desa.utils.export.exportCSVToUserLocation
@@ -19,10 +19,10 @@ import id.go.tapselkab.sapa_desa.utils.time.DateManager.thisDay
 import id.go.tapselkab.sapa_desa.utils.time.DateManager.thisMonth
 import java.time.LocalDate
 
-class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
+class AbsensiViewModel(val repository: AbsensiRepository) : ViewModel() {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val _absensiStatus = MutableStateFlow(absensiResult())
+    private val _absensiStatus = MutableStateFlow(AbsensiResult())
     val absensiStatus = _absensiStatus.asStateFlow()
     private val _absensis: MutableStateFlow<List<AbsensiEntity>> = MutableStateFlow(emptyList())
     val absensis = _absensis.asStateFlow()
@@ -99,7 +99,7 @@ class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
                         timeStamp = timeStamp
                     )
 
-                    _absensiStatus.value = absensiResult(
+                    _absensiStatus.value = AbsensiResult(
                         status = absensiStatus.SUCCESS,
                         //  message = "Wajah cocok (confidence: %.2f)".format(confidence)
                         message = "Wajah cocok (Kemiripan: %.1f%%)".format(confidence)
@@ -108,7 +108,7 @@ class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
                     getAttendenceByUserAndMonth(userId = userId)
 
                 } else {
-                    _absensiStatus.value = absensiResult(
+                    _absensiStatus.value = AbsensiResult(
                         status = absensiStatus.FAILED,
                         message = "Wajah tidak cocok (Kemiripan: %.1f%%)".format(confidence)
                     )
@@ -116,7 +116,7 @@ class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                _absensiStatus.value = absensiResult(
+                _absensiStatus.value = AbsensiResult(
                     absensiStatus.FAILED,
                     "Terjadi kesalahan saat proses absensi: ${e.message}"
                 )
@@ -147,11 +147,9 @@ class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
                     val lateInMillis = timeStamp - DateManager.getMillisAt0815()
                     val lateInMinute = if (lateInMillis > 0) lateInMillis / (60 * 1000) else 0
 
-                    if (!repository.isAttanceExist(userId = userId, date = date)) {
+                    if (!repository.isAbsensiExist(userId = userId, date = date)) {
                         insertAbsensi(
                             userId = userId,
-                            kodeDesa = kodeDesa,
-                            kodeKec = kodeKec,
                             date = date,
                             morning = timeStamp,
                             afternoon = null,
@@ -250,8 +248,6 @@ class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
         try {
             repository.insertAbsensi(
                 userId = userId,
-                kodeDesa = kodeDesa,
-                kodeKec = kodeKec,
                 tanggal = date,
                 pagi = morning,
                 sore = afternoon,
@@ -333,4 +329,4 @@ class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
         }
     }
 
-}
+}*/

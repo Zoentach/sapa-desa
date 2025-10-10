@@ -10,12 +10,12 @@ fun convertabsensiToCSV(absensis: List<AbsensiEntity>): String {
     val rows = absensis.joinToString("\n") { att ->
         listOf(
             att.id,
-            att.userId.toString(),
-            DateManager.formatMillisToDate(att.date),
-            if (att.absensiMorning == null) "Tidak Absen" else TimeManager.formatMillisToHourMinute(att.absensiMorning),
-            if (att.absensiAfternoon == null) "Tidak Absen" else TimeManager.formatMillisToHourMinute(att.absensiAfternoon),
-            att.late?.toString() ?: "",
-            att.early?.toString() ?: "",
+            att.perangkatId.toString(),
+            att.tanggal,
+            if (att.absensiPagi == null) "Tidak Absen" else att.absensiPagi,
+            if (att.absensiSore == null) "Tidak Absen" else att.absensiSore,
+            att.keterlambatan?.toString() ?: "",
+            att.pulangCepat?.toString() ?: "",
             att.syncStatus.toString()
         ).joinToString(",")
     }

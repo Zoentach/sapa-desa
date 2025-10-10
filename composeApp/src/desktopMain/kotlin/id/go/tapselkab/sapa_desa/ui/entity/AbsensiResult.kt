@@ -3,12 +3,12 @@ package id.go.tapselkab.sapa_desa.ui.entity
 //import id.go.tapselkab.database.Absensi
 import id.go.tapselkab.sapa_desa.core.data.network.model.AbsensiRequest
 
-data class absensiResult(
-    val status: absensiStatus = absensiStatus.INITIAL,
+data class AbsensiResult(
+    val status: AbsensiStatus = AbsensiStatus.INITIAL,
     val message: String = ""
 )
 
-enum class absensiStatus {
+enum class AbsensiStatus {
     INITIAL, LOADING, SUCCESS, FAILED
 }
 
