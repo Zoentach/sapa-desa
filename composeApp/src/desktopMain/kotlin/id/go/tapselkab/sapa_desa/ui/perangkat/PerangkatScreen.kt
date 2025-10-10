@@ -28,12 +28,12 @@ import org.koin.compose.koinInject
 
 @Composable
 fun PerangkatScreen(
-    attendanceViewModel: AttendanceViewModel = koinInject(),
+    absensiViewModel: absensiViewModel = koinInject(),
     perangkat: PerangkatEntity?,
     onNavigateBack: () -> Unit
 ) {
 
-    val absensiStatus by attendanceViewModel.absensiStatus.collectAsState()
+    val absensiStatus by absensiViewModel.absensiStatus.collectAsState()
 
 
     // val cameraAvailableIndex by remember { mutableStateOf(CameraManager.findAvailableCameraIndex()) }
@@ -78,7 +78,7 @@ fun PerangkatScreen(
                 if (saved) {
                     CameraManager.releaseCamera()
                     showCamereAbsensi = false
-                    attendanceViewModel.prosesAbsensi(
+                    absensiViewModel.prosesAbsensi(
                         userId = perangkat?.id ?: 0,
                         kodeDesa = perangkat?.kodeDesa ?: "",
                         kodeKec = perangkat?.kodeKec ?: "",
@@ -127,10 +127,10 @@ fun PerangkatScreen(
                 fontFamily = FontFamily(Font(Res.font.geofish)),
             )
 
-            AttendanceButton(
+            absensiButton(
                 modifier = Modifier
                     .padding(top = 10.dp),
-                viewModel = attendanceViewModel
+                viewModel = absensiViewModel
             ) {
                 val index = CameraManager.findAvailableCameraIndex()
                 if (index != null && CameraManager.startCapture(index)) {
@@ -148,7 +148,7 @@ fun PerangkatScreen(
 
             RekapAbsensiHarian(
                 userId = perangkat?.id ?: 0,
-                viewModel = attendanceViewModel
+                viewModel = absensiViewModel
             )
         }
 
@@ -175,9 +175,9 @@ fun PerangkatScreen(
 }
 
 @Composable
-fun AttendanceButton(
+fun absensiButton(
     modifier: Modifier = Modifier,
-    viewModel: AttendanceViewModel,
+    viewModel: absensiViewModel,
     onClick: () -> Unit,
 ) {
 

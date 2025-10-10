@@ -8,7 +8,7 @@ import kotlinx.serialization.json.Json
 
 object NetworkModule {
     // private const val BASE_URL = "http://192.168.1.171:8000" // Ganti jika produksi
-    private const val BASE_URL = "http://192.168.1.5:8000" // Ganti jika produksi
+    private const val BASE_URL = "https://sipaturedesa.id" // Ganti jika produksi
 
     val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -17,4 +17,5 @@ object NetworkModule {
     }
 
     fun apiUrl(path: String): String = "$BASE_URL$path"
+
 }

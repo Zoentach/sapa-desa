@@ -1,53 +1,75 @@
--- Tabel untuk menyimpan data perangkat desa.
+-- Tabel perangkat_desa sesuai schema Laravel
 CREATE TABLE perangkat_desa (
-    id INTEGER NOT NULL PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     nama TEXT,
     nipd TEXT,
-    kode_kec TEXT,
+    nik TEXT,
+    kode_kecamatan TEXT,
     kode_desa TEXT,
     kode_jabatan TEXT,
     mulai TEXT,
     berakhir TEXT,
-    nik TEXT,
     tempat_lahir TEXT,
     tanggal_lahir TEXT,
-    no_sk TEXT,
-    pendidikan TEXT,
+    sk_id INTEGER,
+    pendidikan_id INTEGER,
     jenis_kelamin TEXT,
     agama TEXT,
     no_telp TEXT,
-    status TEXT,
+    status_jabatan TEXT,
+    status_keaktifan TEXT,
     nama_jabatan TEXT
 );
 
--- Kueri untuk memilih semua perangkat desa.
+-- Pilih semua perangkat desa berdasarkan kode_desa
 selectAllPerangkatDesa:
-SELECT * FROM perangkat_desa WHERE kode_desa = ?;
+SELECT * FROM perangkat_desa;
 
--- Kueri untuk memilih perangkat desa berdasarkan ID.
+-- Pilih perangkat desa berdasarkan ID
 selectPerangkatDesaById:
-SELECT * FROM perangkat_desa WHERE id = ?;
+SELECT * FROM perangkat_desa
+WHERE id = :id;
 
--- Kueri untuk menyisipkan data perangkat desa baru.
+-- Sisipkan perangkat desa baru
 insertPerangkatDesa:
 INSERT INTO perangkat_desa (
-    id, nama, nipd, kode_kec, kode_desa, kode_jabatan, mulai, berakhir, nik,
-    tempat_lahir, tanggal_lahir, no_sk, pendidikan, jenis_kelamin, agama,
-    no_telp, status, nama_jabatan
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    id, nama, nipd, nik, kode_kecamatan, kode_desa, kode_jabatan,
+    mulai, berakhir, tempat_lahir, tanggal_lahir, sk_id, pendidikan_id,
+    jenis_kelamin, agama, no_telp, status_jabatan, status_keaktifan, nama_jabatan
+) VALUES (
+    :id, :nama, :nipd, :nik, :kodeKecamatan, :kodeDesa, :kodeJabatan,
+    :mulai, :berakhir, :tempatLahir, :tanggalLahir, :skId, :pendidikanId,
+    :jenisKelamin, :agama, :noTelp, :statusJabatan, :statusKeaktifan, :namaJabatan
+);
 
--- Kueri untuk memperbarui data perangkat desa.
+-- Perbarui perangkat desa berdasarkan ID
 updatePerangkatDesa:
 UPDATE perangkat_desa
-SET id = ?, nama = ?, nipd = ?, kode_kec = ?, kode_desa = ?, kode_jabatan = ?, mulai = ?, berakhir = ?,
-    nik = ?, tempat_lahir = ?, tanggal_lahir = ?, no_sk = ?, pendidikan = ?,
-    jenis_kelamin = ?, agama = ?, no_telp = ?, status = ?, nama_jabatan = ?
-WHERE id = ?;
+SET nama = :nama,
+    nipd = :nipd,
+    nik = :nik,
+    kode_kecamatan = :kodeKecamatan,
+    kode_desa = :kodeDesa,
+    kode_jabatan = :kodeJabatan,
+    mulai = :mulai,
+    berakhir = :berakhir,
+    tempat_lahir = :tempatLahir,
+    tanggal_lahir = :tanggalLahir,
+    sk_id = :skId,
+    pendidikan_id = :pendidikanId,
+    jenis_kelamin = :jenisKelamin,
+    agama = :agama,
+    no_telp = :noTelp,
+    status_jabatan = :statusJabatan,
+    status_keaktifan = :statusKeaktifan,
+    nama_jabatan = :namaJabatan
+WHERE id = :id;
 
--- Kueri untuk menghapus perangkat desa berdasarkan ID.
+-- Hapus perangkat desa berdasarkan ID
 deletePerangkatDesaById:
-DELETE FROM perangkat_desa WHERE id = ?;
+DELETE FROM perangkat_desa
+WHERE id = :id;
 
-
+-- Hapus semua perangkat desa
 deleteAllPerangkatDesa:
 DELETE FROM perangkat_desa;

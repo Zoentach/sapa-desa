@@ -23,7 +23,7 @@ data class PerangkatEntity(
 //        kodeJabatan = this.kode_jabatan.orEmpty(),
 //        jabatan = this.nama_jabatan.orEmpty(),
 //        kodeDesa = PerangkatDesa.kode_desa,
-//        kodeKec = PerangkatDesa.kode_kec
+//        kodeKec = PerangkatDesa.kode_kecamatan
 //    )
 //}
 
@@ -35,6 +35,6 @@ fun Perangkat_desa.toEntity(): PerangkatEntity {
         kodeJabatan = this.kode_jabatan.orEmpty(),
         jabatan = this.nama_jabatan.orEmpty(),
         kodeDesa = this.kode_desa.orEmpty(),
-        kodeKec = this.kode_kec.orEmpty()
+        kodeKec = this.kode_kecamatan.orEmpty()
     )
 }

@@ -6,7 +6,7 @@ import java.util.*
 
 object TimeManager {
 
-    fun SaveAttendance() {
+    fun Saveabsensi() {
 
         val currentTimeMillis = getCurrentTimeMillis() ?: throw Exception("Gagal mendapatkan waktu")
 
@@ -25,12 +25,12 @@ object TimeManager {
 
             // Jam 06.00 - 11.59 (pagi)
             hour in 6..11 -> {
-                morningAttendance(hour, minute)
+                morningabsensi(hour, minute)
             }
 
             // Jam 12.00 - 17.59 (sore)
             hour in 12..21 -> {
-                afternoonAttendance(hour, minute)
+                afternoonabsensi(hour, minute)
             }
 
             // Di luar jam absensi yang diizinkan
@@ -41,13 +41,13 @@ object TimeManager {
 
     }
 
-    fun morningAttendance(
+    fun morningabsensi(
         hours: Int, minute: Int
     ) {
 
     }
 
-    fun afternoonAttendance(
+    fun afternoonabsensi(
         hours: Int, minute: Int
     ) {
 

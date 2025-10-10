@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import attanceTextStatus
 import id.go.tapselkab.sapa_desa.di.viewModelModule
 import id.go.tapselkab.sapa_desa.ui.component.dialog.MonthPicker
-import id.go.tapselkab.sapa_desa.ui.entity.AttendanceEntity
+import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
 import id.go.tapselkab.sapa_desa.utils.time.DateManager
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -30,7 +30,7 @@ import java.time.LocalDate
 @Composable
 fun RekapAbsensiHarian(
     userId: Int,
-    viewModel: AttendanceViewModel,
+    viewModel: absensiViewModel,
 ) {
 
     LaunchedEffect(Unit) {
@@ -39,7 +39,7 @@ fun RekapAbsensiHarian(
 
     }
 
-    val attendances by viewModel.attendances.collectAsState()
+    val absensis by viewModel.absensis.collectAsState()
 
     val date by viewModel.thisMonth.collectAsState()
 
@@ -60,7 +60,7 @@ fun RekapAbsensiHarian(
             onMonthYearSelected = { month, year ->
                 selectedMonth = month
                 selectedYear = year
-                viewModel.getUpdateAttendance(
+                viewModel.getUpdateabsensi(
                     userId = userId,
                     month = month,
                     year = year
@@ -106,7 +106,7 @@ fun RekapAbsensiHarian(
 
             OutlinedButton(
                 onClick = {
-                    viewModel.exportAttendanceToCSV(attendances)
+                    viewModel.exportabsensiToCSV(absensis)
                 },
                 content = {
                     Text("Export")
@@ -115,11 +115,11 @@ fun RekapAbsensiHarian(
         }
         Spacer(Modifier.height(6.dp))
         HeaderTableAbsensi()
-        attendances.forEach {
+        absensis.forEach {
             BodyTableAbsensi(
-                attendance = it,
-                onSendAttendance = { attendance ->
-                    viewModel.sendAttendanceToServer(attendance)
+                absensi = it,
+                onSendabsensi = { absensi ->
+                    viewModel.sendabsensiToServer(absensi)
                 }
             )
         }
@@ -185,8 +185,8 @@ fun HeaderTableAbsensi() {
 
 @Composable
 fun BodyTableAbsensi(
-    attendance: AttendanceEntity,
-    onSendAttendance: (attendance: AttendanceEntity) -> Unit
+    absensi: AbsensiEntity,
+    onSendabsensi: (absensi: AbsensiEntity) -> Unit
 ) {
 
     Row {
@@ -196,14 +196,14 @@ fun BodyTableAbsensi(
                 .weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = DateManager.formatMillisToDate(attendance.date),
+            text = DateManager.formatMillisToDate(absensi.date),
             textAlign = TextAlign.Center
         )
         Text(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = attanceTextStatus(attendance = attendance.attendanceMorning, date = attendance.date ?: 0),
+            text = attanceTextStatus(absensi = absensi.absensiMorning, date = absensi.date ?: 0),
             textAlign = TextAlign.Center
         )
 
@@ -211,39 +211,39 @@ fun BodyTableAbsensi(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = if (attendance.late == null) "~" else "${attendance.late} Menit",
+            text = if (absensi.late == null) "~" else "${absensi.late} Menit",
             textAlign = TextAlign.Center
         )
         Text(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = attanceTextStatus(attendance = attendance.attendanceAfternoon, date = attendance.date ?: 0),
+            text = attanceTextStatus(absensi = absensi.absensiAfternoon, date = absensi.date ?: 0),
             textAlign = TextAlign.Center
         )
         Text(
             modifier = Modifier.weight(1f)
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = if (attendance.early == null) "~" else "${attendance.early} Menit",
+            text = if (absensi.early == null) "~" else "${absensi.early} Menit",
             textAlign = TextAlign.Center
         )
 
         Text(
             modifier = Modifier.weight(1f)
                 .clickable {
-                    onSendAttendance(attendance)
-//                    when (attendance.syncStatus) {
+                    onSendabsensi(absensi)
+//                    when (absensi.syncStatus) {
 //                        0 -> {
-//                            onSendAttendance(attendance)
+//                            onSendabsensi(absensi)
 //                        }
 //                    }
                 }
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = if (attendance.syncStatus == 0) "Kirim" else "Terkirim",
+            text = if (absensi.syncStatus == 0) "Kirim" else "Terkirim",
             textAlign = TextAlign.Center,
-            color = if (attendance.syncStatus == 0) Color.Blue else Color.Gray,
+            color = if (absensi.syncStatus == 0) Color.Blue else Color.Gray,
             fontWeight = FontWeight.ExtraBold
         )
     }

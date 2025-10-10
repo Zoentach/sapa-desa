@@ -55,10 +55,7 @@ class AuthRepository(
             db.userQueries.insertUser(
                 name = user.name,
                 email = user.email,
-                kode_desa = user.kode_desa,
-                kode_kec = user.kode_kec,
                 token = token,
-                mac_address = user.mac_address,
             )
         } catch (e: Exception) {
             println("User fetch failed: ${e.message}")
@@ -72,15 +69,12 @@ class AuthRepository(
         return try {
             val generatedUser = db.userQueries.selectAllUser().executeAsOneOrNull()
             // Konversi dari data class yang dihasilkan SQLDelight ke UserEntity
-            generatedUser?.let {
+            generatedUser?.let { user ->
                 UserEntity(
-                    id = it.id.toInt(),
-                    name = it.name,
-                    email = it.email,
-                    kodeDesa = it.kode_desa,
-                    kodeKec = it.kode_kec,
-                    macAddress = it.mac_address,
-                    token = it.token
+                    id = user.id.toInt(),
+                    name = user.name,
+                    email = user.email,
+                    token = user.token
                 )
             }
         } catch (e: Exception) {
@@ -92,27 +86,30 @@ class AuthRepository(
     /**
      * Memperbarui alamat MAC pengguna di database lokal dan API.
      */
-    suspend fun updateMacAddress(macAddress: String): Boolean {
-        val user = getCurrentUser()
-        val token = user?.token
+    /*  suspend fun updateMacAddress(macAddress: String): Boolean {
+          val user = getCurrentUser()
+          val token = user?.token
 
-        if (token.isNullOrBlank()) {
-            println("User fetch failed: Token tidak tersedia")
-            return false
-        }
+          if (token.isNullOrBlank()) {
+              println("User fetch failed: Token tidak tersedia")
+              return false
+          }
 
-        return try {
-            db.userQueries.updateUserMacAddressByKodeDesa(mac_address = macAddress, kode_desa = user.kodeDesa)
+          return try {
+              db.userQueries.updateUserMacAddressByKodeDesa(
+                  mac_address = macAddress,
+                  kode_desa = user.kodeDesa
+              )
 
-            if (token != "default") {
-                api.updateMacAddress(token = token, macAddress = macAddress)
-            }
-            true
-        } catch (e: Exception) {
-            println("Error updating MAC address: $e")
-            false
-        }
-    }
+              if (token != "default") {
+                  api.updateMacAddress(token = token, macAddress = macAddress)
+              }
+              true
+          } catch (e: Exception) {
+              println("Error updating MAC address: $e")
+              false
+          }
+      }*/
 
     /**
      * Menghapus semua data pengguna dari database lokal (logout).

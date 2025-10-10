@@ -1,0 +1,54 @@
+CREATE TABLE absensi (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    perangkat_id INTEGER NOT NULL,
+    kode_desa TEXT,
+    kode_kecamatan TEXT,
+    tanggal TEXT NOT NULL, -- format "YYYY-MM-DD"
+    absensi_pagi TEXT,     -- format "HH:mm:ss"
+    absensi_sore TEXT,     -- format "HH:mm:ss"
+    keterlambatan INTEGER,
+    pulang_cepat INTEGER,
+    sync_status INTEGER NOT NULL DEFAULT 0
+);
+
+-- Select semua absensi
+selectAllAbsensi:
+SELECT * FROM absensi;
+
+-- Select by id
+selectAbsensiById:
+SELECT * FROM absensi WHERE id = ?;
+
+-- Cek absensi berdasarkan tanggal dan perangkat
+selectByDate:
+SELECT COUNT(*) FROM absensi
+WHERE tanggal = ? AND perangkat_id = ?;
+
+-- Select absensi by user dan range bulan
+selectAbsensiByUserAndMonth:
+SELECT * FROM absensi
+WHERE perangkat_id = ?
+AND tanggal BETWEEN ? AND ?;
+
+-- Insert absensi
+insertAbsensi:
+INSERT INTO absensi (
+    perangkat_id, kode_desa, kode_kecamatan, tanggal,
+    absensi_pagi, absensi_sore, keterlambatan, pulang_cepat, sync_status
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Delete by id
+deleteAbsensiById:
+DELETE FROM absensi WHERE id = ?;
+
+-- Update absensi sore
+updateAbsensiAfternoonByUserAndDate:
+UPDATE absensi
+SET absensi_sore = ?, pulang_cepat = ?, sync_status = ?
+WHERE perangkat_id = ? AND tanggal = ?;
+
+-- Update status sinkronisasi
+updateAbsensiSyncStatus:
+UPDATE absensi
+SET sync_status = ?
+WHERE perangkat_id = ? AND tanggal = ?;

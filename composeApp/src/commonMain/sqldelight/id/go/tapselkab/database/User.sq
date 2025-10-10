@@ -1,59 +1,43 @@
--- Tabel untuk menyimpan data pengguna aplikasi.
+-- Tabel user
 CREATE TABLE user (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    kode_desa TEXT NOT NULL,
-    kode_kec TEXT NOT NULL,
-    token TEXT NOT NULL,
-    mac_address TEXT
+    token TEXT NOT NULL
 );
 
--- Kueri untuk memilih semua pengguna.
+-- Pilih semua pengguna
 selectAllUser:
 SELECT * FROM user;
 
--- Kueri untuk memilih pengguna berdasarkan ID.
+-- Pilih pengguna berdasarkan ID
 selectUserById:
-SELECT * FROM user WHERE id = ?;
+SELECT * FROM user WHERE id = :id;
 
--- Kueri untuk memilih pengguna berdasarkan ID dan token.
+-- Pilih pengguna berdasarkan ID dan token
 selectUserByIdAndToken:
-SELECT * FROM user WHERE id = ? AND token = ?;
+SELECT * FROM user WHERE id = :id AND token = :token;
 
--- Kueri untuk memilih pengguna berdasarkan mac_address.
-selectUserByMacAddress:
-SELECT * FROM user WHERE mac_address = ?;
-
--- Kueri untuk menyisipkan atau mengganti pengguna baru.
--- Jika pengguna sudah ada (berdasarkan email), data lama akan diganti dengan yang baru.
+-- Sisipkan atau ganti pengguna baru
 insertUser:
 REPLACE INTO user (
-    email, name, kode_desa, kode_kec, token, mac_address
-) VALUES (?, ?, ?, ?, ?, ?);
+    email, name, token
+) VALUES (
+    :email, :name, :token
+);
 
--- Kueri untuk memperbarui data pengguna.
+-- Perbarui data pengguna berdasarkan ID
 updateUser:
 UPDATE user
-SET name = ?, email = ?, kode_desa = ?, kode_kec = ?, token = ?, mac_address = ?
-WHERE id = ?;
+SET name = :name,
+    email = :email,
+    token = :token
+WHERE id = :id;
 
--- Kueri untuk memperbarui mac_address pengguna.
-updateUserMacAddress:
-UPDATE user
-SET mac_address = ?
-WHERE id = ?;
-
--- Kueri untuk memperbarui mac_address berdasarkan kode_desa.
-updateUserMacAddressByKodeDesa:
-UPDATE user
-SET mac_address = ?
-WHERE kode_desa = ?;
-
--- Kueri untuk menghapus pengguna berdasarkan ID.
+-- Hapus pengguna berdasarkan ID
 deleteUserById:
-DELETE FROM user WHERE id = ?;
+DELETE FROM user WHERE id = :id;
 
--- Kueri untuk menghapus semua pengguna dari tabel.
+-- Hapus semua pengguna
 deleteAllUser:
 DELETE FROM user;

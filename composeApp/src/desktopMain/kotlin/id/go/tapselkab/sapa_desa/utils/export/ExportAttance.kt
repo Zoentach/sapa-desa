@@ -1,19 +1,19 @@
 package id.go.tapselkab.sapa_desa.utils.export
 
-import id.go.tapselkab.sapa_desa.ui.entity.AttendanceEntity
+import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
 import id.go.tapselkab.sapa_desa.utils.file.PickFolder
 import id.go.tapselkab.sapa_desa.utils.time.DateManager
 import id.go.tapselkab.sapa_desa.utils.time.TimeManager
 
-fun convertAttendanceToCSV(attendances: List<AttendanceEntity>): String {
+fun convertabsensiToCSV(absensis: List<AbsensiEntity>): String {
     val header = "ID,User ID,Date,Morning,Afternoon,Late,Early,Sync Status\n"
-    val rows = attendances.joinToString("\n") { att ->
+    val rows = absensis.joinToString("\n") { att ->
         listOf(
             att.id,
             att.userId.toString(),
             DateManager.formatMillisToDate(att.date),
-            if (att.attendanceMorning == null) "Tidak Absen" else TimeManager.formatMillisToHourMinute(att.attendanceMorning),
-            if (att.attendanceAfternoon == null) "Tidak Absen" else TimeManager.formatMillisToHourMinute(att.attendanceAfternoon),
+            if (att.absensiMorning == null) "Tidak Absen" else TimeManager.formatMillisToHourMinute(att.absensiMorning),
+            if (att.absensiAfternoon == null) "Tidak Absen" else TimeManager.formatMillisToHourMinute(att.absensiAfternoon),
             att.late?.toString() ?: "",
             att.early?.toString() ?: "",
             att.syncStatus.toString()
@@ -22,8 +22,8 @@ fun convertAttendanceToCSV(attendances: List<AttendanceEntity>): String {
     return header + rows
 }
 
-fun exportCSVToUserLocation(attendances: List<AttendanceEntity>) {
-    val csvContent = convertAttendanceToCSV(attendances)
+fun exportCSVToUserLocation(absensis: List<AbsensiEntity>) {
+    val csvContent = convertabsensiToCSV(absensis)
     val file = PickFolder()
     if (file != null) {
         file.writeText(csvContent)

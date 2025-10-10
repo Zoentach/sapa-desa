@@ -8,38 +8,46 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.io.IOException
-import org.bytedeco.flycapture.FlyCapture2.MACAddress
 import id.go.tapselkab.sapa_desa.core.data.model.*
-import id.go.tapselkab.sapa_desa.core.data.network.model.AttendanceRequest
+import id.go.tapselkab.sapa_desa.core.data.network.model.AbsensiRequest
 import java.io.File
 
 interface AuthApiService {
-    suspend fun loginWithEmail(email: String, password: String, deviceName: String = "SAPA DESA"): String
+    // suspend fun loginWithEmail(email: String, password: String, deviceName: String = "SAPA DESA"): String
+    suspend fun loginWithEmail(email: String, password: String): String
 
     //  suspend fun loginWithToken(token: String): Boolean
     suspend fun getUser(token: String): UserResponse
 
-    suspend fun getPerangkat(token: String, kode_desa: String): List<PerangkatModel>?
+    suspend fun getPerangkat(token: String): List<PerangkatModel>?
 
-    suspend fun insertAttendanceWithImages(
+    suspend fun insertAbsensiWithImages(
         token: String,
-        attendance: AttendanceRequest,
-        imageMorning: File?,
-        imageAfternoon: File?
+        absensi: AbsensiRequest,
+        gambarPagi: File?,
+        gambarSore: File?
+    ): Boolean
+
+    suspend fun insertAbsensiWithLampiran(
+        token: String,
+        keterangan: String,
+        lampiran: String
     ): Boolean
 
     suspend fun updateMacAddress(
         token: String,
         macAddress: String
     ): Boolean
+
 }
 
 class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) : AuthApiService {
-    override suspend fun loginWithEmail(email: String, password: String, deviceName: String): String {
+
+    override suspend fun loginWithEmail(email: String, password: String): String {
         return try {
             val response: HttpResponse = client.post(NetworkModule.apiUrl("/api/sanctum/token")) {
                 contentType(ContentType.Application.Json)
-                setBody(LoginRequest(email, password, deviceName))
+                setBody(LoginRequest(email, password))
             }
 
             // Cek response code jika diperlukan
@@ -89,7 +97,7 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
         }
     }
 
-    override suspend fun getPerangkat(token: String, kode_desa: String): List<PerangkatModel>? {
+    override suspend fun getPerangkat(token: String): List<PerangkatModel>? {
         return try {
             val response = client.get(NetworkModule.apiUrl("/api/perangkat-desa")) {
                 headers {
@@ -97,7 +105,7 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
                     append(HttpHeaders.Accept, "application/json")
 
                 }
-                parameter("kode_desa", kode_desa)
+                // parameter("kode_desa", kode_desa)
             }
 
             if (!response.status.isSuccess()) {
@@ -117,36 +125,35 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
         }
     }
 
-    override suspend fun insertAttendanceWithImages(
+    //keterangan dan lampiran bernilai default null
+    override suspend fun insertAbsensiWithImages(
         token: String,
-        attendance: AttendanceRequest,
-        imageMorning: File?,
-        imageAfternoon: File?
+        absensi: AbsensiRequest,
+        gambarPagi: File?,
+        gambarSore: File?
     ): Boolean {
 
         return try {
             val response = client.submitFormWithBinaryData(
-                url = NetworkModule.apiUrl("/api/attendance"),
+                url = NetworkModule.apiUrl("/api/absensi"),
                 formData = formData {
-                    append("user_id", attendance.user_id.toString())
-                    append("kode_desa", attendance.kode_desa)
-                    append("kode_kec", attendance.kode_kec)
-                    append("date", attendance.date.toString())
-                    attendance.attendance_morning?.let { append("attendance_morning", it.toString()) }
-                    attendance.attendance_afternoon?.let { append("attendance_afternoon", it.toString()) }
-                    attendance.late?.let { append("late", it.toString()) }
-                    attendance.early?.let { append("early", it.toString()) }
+                    append("perangkat_id", absensi.perangkat_id.toString())
+                    append("tanggal", absensi.tanggal)
+                    absensi.absensi_pagi?.let { append("absensi_pagi", it.toString()) }
+                    absensi.absensi_sore?.let { append("absensi_sore", it.toString()) }
+                    absensi.keterlambatan?.let { append("keterlambatan", it.toString()) }
+                    absensi.pulang_cepat?.let { append("pulang_cepat", it.toString()) }
 
 
-                    imageMorning?.let {
-                        append("image_morning", it.readBytes(), Headers.build {
+                    gambarPagi?.let {
+                        append("gambar_pagi", it.readBytes(), Headers.build {
                             append(HttpHeaders.ContentType, "image/jpeg")
                             append(HttpHeaders.ContentDisposition, "filename=\"${it.name}\"")
                         })
                     }
 
-                    imageAfternoon?.let {
-                        append("image_afternoon", it.readBytes(), Headers.build {
+                    gambarSore?.let {
+                        append("gambar_sore", it.readBytes(), Headers.build {
                             append(HttpHeaders.ContentType, "image/jpeg")
                             append(HttpHeaders.ContentDisposition, "filename=\"${it.name}\"")
                         })
@@ -159,13 +166,21 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                throw Exception("Gagal insert attendance: ${response.status}")
+                throw Exception("Gagal insert absensi: ${response.status}")
             }
 
             true
         } catch (e: Exception) {
-            throw Exception("Gagal upload attendance: ${e.message}")
+            throw Exception("Gagal upload absensi: ${e.message}")
         }
+    }
+
+    override suspend fun insertAbsensiWithLampiran(
+        token: String,
+        keterangan: String,
+        lampiran: String
+    ): Boolean {
+        return true
     }
 
     override suspend fun updateMacAddress(token: String, macAddress: String): Boolean {

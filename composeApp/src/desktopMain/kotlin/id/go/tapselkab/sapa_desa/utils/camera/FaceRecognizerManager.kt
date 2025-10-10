@@ -68,13 +68,13 @@ object FaceRecognizerManager {
         }
     }
 
-    suspend fun cropAllFaces(faceRef: String, attendanceFace: String):  Pair<Boolean, Double> {
+    suspend fun cropAllFaces(faceRef: String, absensiFace: String):  Pair<Boolean, Double> {
         return try {
             val home = System.getProperty("user.home")
             val basePath = "$home/.absensiApp/$faceRef"
 
-            val capturedPath = "$basePath/$attendanceFace.jpg"
-            val capturedCropPath = "$basePath/$attendanceFace-cropped.jpg"
+            val capturedPath = "$basePath/$absensiFace.jpg"
+            val capturedCropPath = "$basePath/$absensiFace-cropped.jpg"
             val refPath = "$basePath/$faceRef.jpg"
             val refCropPath = "$basePath/$faceRef-cropped.jpg"
 

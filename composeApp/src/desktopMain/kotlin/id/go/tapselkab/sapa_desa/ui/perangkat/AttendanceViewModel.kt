@@ -6,10 +6,10 @@ import io.ktor.util.date.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import id.go.tapselkab.sapa_desa.core.repository.AttendanceRepository
-import id.go.tapselkab.sapa_desa.ui.entity.AttendanceEntity
-import id.go.tapselkab.sapa_desa.ui.entity.AttendanceResult
-import id.go.tapselkab.sapa_desa.ui.entity.AttendanceStatus
+import id.go.tapselkab.sapa_desa.core.repository.AbsensiRepository
+import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
+import id.go.tapselkab.sapa_desa.ui.entity.absensiResult
+import id.go.tapselkab.sapa_desa.ui.entity.absensiStatus
 import id.go.tapselkab.sapa_desa.ui.entity.toEntity
 import id.go.tapselkab.sapa_desa.utils.camera.FaceRecognizerManager
 import id.go.tapselkab.sapa_desa.utils.export.exportCSVToUserLocation
@@ -19,13 +19,13 @@ import id.go.tapselkab.sapa_desa.utils.time.DateManager.thisDay
 import id.go.tapselkab.sapa_desa.utils.time.DateManager.thisMonth
 import java.time.LocalDate
 
-class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
+class absensiViewModel(val repository: AbsensiRepository) : ViewModel() {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val _absensiStatus = MutableStateFlow(AttendanceResult())
+    private val _absensiStatus = MutableStateFlow(absensiResult())
     val absensiStatus = _absensiStatus.asStateFlow()
-    private val _attendances: MutableStateFlow<List<AttendanceEntity>> = MutableStateFlow(emptyList())
-    val attendances = _attendances.asStateFlow()
+    private val _absensis: MutableStateFlow<List<AbsensiEntity>> = MutableStateFlow(emptyList())
+    val absensis = _absensis.asStateFlow()
 
     private val _buttonStatus = MutableStateFlow(ButtonStatus())
     val buttonStatus = _buttonStatus.asStateFlow()
@@ -44,7 +44,7 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
         _thisDay.value = DateManager.getMillisAt0815().thisDay()
     }
 
-    fun getUpdateAttendance(userId: Int, month: Int, year: Int) {
+    fun getUpdateabsensi(userId: Int, month: Int, year: Int) {
         try {
             _thisMonth.value = TimeManager.getThisMonthMillisAt(month, year).thisMonth()
             getAttendenceByUserAndMonth(userId = userId, month = month, year = year)
@@ -92,15 +92,15 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
 
                 if (isMatch) {
 
-                    saveAttendance(
+                    saveabsensi(
                         userId = userId,
                         kodeDesa = kodeDesa,
                         kodeKec = kodeKec,
                         timeStamp = timeStamp
                     )
 
-                    _absensiStatus.value = AttendanceResult(
-                        status = AttendanceStatus.SUCCESS,
+                    _absensiStatus.value = absensiResult(
+                        status = absensiStatus.SUCCESS,
                         //  message = "Wajah cocok (confidence: %.2f)".format(confidence)
                         message = "Wajah cocok (Kemiripan: %.1f%%)".format(confidence)
                     )
@@ -108,23 +108,23 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
                     getAttendenceByUserAndMonth(userId = userId)
 
                 } else {
-                    _absensiStatus.value = AttendanceResult(
-                        status = AttendanceStatus.FAILED,
+                    _absensiStatus.value = absensiResult(
+                        status = absensiStatus.FAILED,
                         message = "Wajah tidak cocok (Kemiripan: %.1f%%)".format(confidence)
                     )
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                _absensiStatus.value = AttendanceResult(
-                    AttendanceStatus.FAILED,
+                _absensiStatus.value = absensiResult(
+                    absensiStatus.FAILED,
                     "Terjadi kesalahan saat proses absensi: ${e.message}"
                 )
             }
         }
     }
 
-    private fun saveAttendance(
+    private fun saveabsensi(
         userId: Int,
         kodeDesa: String,
         kodeKec: String,
@@ -148,7 +148,7 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
                     val lateInMinute = if (lateInMillis > 0) lateInMillis / (60 * 1000) else 0
 
                     if (!repository.isAttanceExist(userId = userId, date = date)) {
-                        insertAttendance(
+                        insertAbsensi(
                             userId = userId,
                             kodeDesa = kodeDesa,
                             kodeKec = kodeKec,
@@ -170,7 +170,7 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
                     print("$earlyInMinute")
 
                     if (repository.isAttanceExist(userId = userId, date = date)) {
-                        updateAttendance(
+                        updateabsensi(
                             userId = userId,
                             afternoon = timeStamp,
                             early = earlyInMinute,
@@ -178,7 +178,7 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
                             date = date
                         )
                     } else {
-                        insertAttendance(
+                        insertAbsensi(
                             userId = userId,
                             kodeDesa = kodeDesa,
                             kodeKec = kodeKec,
@@ -204,29 +204,29 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
     }
 
 
-    fun sendAttendanceToServer(attendance: AttendanceEntity) {
+    fun sendabsensiToServer(absensi: AbsensiEntity) {
         coroutineScope.launch {
             try {
-                val isSaved = repository.sendAttendanceToServer(
-                    attendance = attendance,
-                    imageMorning = if (attendance.attendanceMorning != null) getFile(
-                        folderName = "${attendance.userId}",
-                        fileName = "${attendance.attendanceMorning}.jpg"
+                val isSaved = repository.sendAbsensiToServer(
+                    absensi = absensi,
+                    gambarPagi = if (absensi.absensiMorning != null) getFile(
+                        folderName = "${absensi.userId}",
+                        fileName = "${absensi.absensiMorning}.jpg"
                     ) else null,
-                    imageAfternoon = if (attendance.attendanceAfternoon != null) getFile(
-                        folderName = "${attendance.userId}",
-                        fileName = "${attendance.attendanceAfternoon}.jpg"
+                    gambarSore = if (absensi.absensiAfternoon != null) getFile(
+                        folderName = "${absensi.userId}",
+                        fileName = "${absensi.absensiAfternoon}.jpg"
                     ) else null
                 )
                 if (isSaved) {
-                    updateAttendance(
-                        userId = attendance.userId,
-                        date = attendance.date,
+                    updateabsensi(
+                        userId = absensi.userId,
+                        date = absensi.date,
                         syncStatus = 1
                     )
                     delay(1000)
                     getAttendenceByUserAndMonth(
-                        userId = attendance.userId
+                        userId = absensi.userId
                     )
                 }
             } catch (e: Exception) {
@@ -236,7 +236,7 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
     }
 
 
-    private fun insertAttendance(
+    private fun insertAbsensi(
         userId: Int,
         kodeDesa: String,
         kodeKec: String,
@@ -248,15 +248,15 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
         syncStatus: Int
     ) {
         try {
-            repository.insertAttendance(
+            repository.insertAbsensi(
                 userId = userId,
                 kodeDesa = kodeDesa,
                 kodeKec = kodeKec,
-                date = date,
-                morning = morning,
-                afternoon = afternoon,
-                late = late,
-                early = early,
+                tanggal = date,
+                pagi = morning,
+                sore = afternoon,
+                keterlambatan = late,
+                pulangCepat = early,
                 syncStatus = syncStatus
             )
         } catch (e: Exception) {
@@ -264,7 +264,7 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
         }
     }
 
-    private fun updateAttendance(
+    private fun updateabsensi(
         userId: Int,
         afternoon: Long?,
         date: Long?,
@@ -272,11 +272,11 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
         syncStatus: Int
     ) {
         try {
-            repository.updateAfternoonAttendance(
-                userId = userId,
-                afternoon = afternoon,
-                date = date,
-                early = early,
+            repository.updateAfternoonAbsensi(
+                perangkatId = userId,
+                sore = afternoon,
+                tanggal = date,
+                pulangCepat = early,
                 syncStatus = syncStatus
 
             )
@@ -285,15 +285,15 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
         }
     }
 
-    private fun updateAttendance(
+    private fun updateabsensi(
         userId: Int,
         date: Long?,
         syncStatus: Int
     ) {
         try {
-            repository.updateAttendanceSyncStatus(
-                userId = userId.toLong(),
-                date = date,
+            repository.updateAbsensiSyncStatus(
+                perangkatId = userId.toLong(),
+                tanggal = date,
                 syncStatus = syncStatus.toLong()
             )
         } catch (e: Exception) {
@@ -309,14 +309,14 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
     ) {
         try {
 
-            val attendances = repository
-                .getAttendanceByUserAndMonth(
+            val absensis = repository
+                .getabsensiByUserAndMonth(
                     userId = userId,
                     startDay = DateManager.startOfMonth(year, month),
                     endDay = DateManager.endOfMonth(year, month)
                 )
 
-            _attendances.value = attendances.map {
+            _absensis.value = absensis.map {
                 it.toEntity()
             }
         } catch (e: Exception) {
@@ -325,9 +325,9 @@ class AttendanceViewModel(val repository: AttendanceRepository) : ViewModel() {
     }
 
 
-    fun exportAttendanceToCSV(attendances: List<AttendanceEntity>) {
+    fun exportabsensiToCSV(absensis: List<AbsensiEntity>) {
         try {
-            exportCSVToUserLocation(attendances)
+            exportCSVToUserLocation(absensis)
         } catch (e: Exception) {
             print(e.message)
         }

@@ -30,7 +30,7 @@ class DatabaseImporter(
         val name: String,
         val email: String,
         val kode_desa: String,
-        val kode_kec: String
+        val kode_kecamatan: String
     )
 
     @Serializable
@@ -38,7 +38,7 @@ class DatabaseImporter(
         val id: Int,
         val nama: String,
         val nipd: String? = null,
-        val kode_kec: String,
+        val kode_kecamatan: String,
         val kode_desa: String,
         val kode_jabatan: String,
         val mulai: String? = null,
@@ -46,13 +46,14 @@ class DatabaseImporter(
         val nik: String? = null,
         val tempat_lahir: String? = null,
         val tanggal_lahir: String? = null,
-        val no_sk: String? = null,
-        val pendidikan: String? = null,
+        val sk_id: Int? = null,
+        val pendidikan_id: String? = null,
         val jenis_kelamin: String? = null,
         val agama: String? = null,
         val no_telp: String? = null,
-        val status: String? = null,
-        val nama_jabatan: String
+        val nama_jabatan: String? = null,
+        val status_jabatan: String? = null,
+        val status_keaktifan: String? = null
     )
 
     @Serializable
@@ -81,10 +82,7 @@ class DatabaseImporter(
                     userQueries.insertUser(
                         email = userJson.email,
                         name = userJson.name,
-                        kode_desa = userJson.kode_desa,
-                        kode_kec = userJson.kode_kec,
                         token = "default", // Mengatur token ke 'default'
-                        mac_address = null
                     )
                 }
 
@@ -94,21 +92,22 @@ class DatabaseImporter(
                         id = perangkatJson.id.toLong(),
                         nama = perangkatJson.nama,
                         nipd = perangkatJson.nipd,
-                        kode_kec = perangkatJson.kode_kec,
-                        kode_desa = perangkatJson.kode_desa,
-                        kode_jabatan = perangkatJson.kode_jabatan,
+                        kodeKecamatan = perangkatJson.kode_kecamatan,
+                        kodeDesa = perangkatJson.kode_desa,
+                        kodeJabatan = perangkatJson.kode_jabatan,
                         mulai = perangkatJson.mulai,
                         berakhir = perangkatJson.berakhir,
                         nik = perangkatJson.nik,
-                        tempat_lahir = perangkatJson.tempat_lahir,
-                        tanggal_lahir = perangkatJson.tanggal_lahir,
-                        no_sk = perangkatJson.no_sk,
-                        pendidikan = perangkatJson.pendidikan,
-                        jenis_kelamin = perangkatJson.jenis_kelamin,
+                        tempatLahir = perangkatJson.tempat_lahir,
+                        tanggalLahir = perangkatJson.tanggal_lahir,
+                        skId = perangkatJson.sk_id?.toLong(),
+                        pendidikanId = perangkatJson.pendidikan_id?.toLong(),
+                        jenisKelamin = perangkatJson.jenis_kelamin,
                         agama = perangkatJson.agama,
-                        no_telp = perangkatJson.no_telp,
-                        status = perangkatJson.status,
-                        nama_jabatan = perangkatJson.nama_jabatan
+                        noTelp = perangkatJson.no_telp,
+                        statusJabatan = perangkatJson.status_jabatan,
+                        statusKeaktifan = perangkatJson.status_keaktifan,
+                        namaJabatan = perangkatJson.nama_jabatan
                     )
                 }
             }
