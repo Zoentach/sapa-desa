@@ -1,0 +1,48 @@
+CREATE TABLE verifikasi_absensi (
+    user_id INTEGER NOT NULL PRIMARY KEY,
+    kode_kecamatan TEXT NOT NULL,
+    kode_desa TEXT NOT NULL,
+    mac_address TEXT,
+    latitude REAL,
+    longitude REAL,
+    sync_status INTEGER NOT NULL DEFAULT 0
+);
+
+selectAllVerifikasiAbsensi:
+SELECT * FROM verifikasi_absensi;
+
+selectVerifikasiByUserId:
+SELECT * FROM verifikasi_absensi WHERE user_id = ?;
+
+insertOrReplaceVerifikasi:
+REPLACE INTO verifikasi_absensi (
+    user_id,
+    kode_kecamatan,
+    kode_desa,
+    mac_address,
+    latitude,
+    longitude,
+    sync_status
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updateVerifikasiByUserId:
+UPDATE verifikasi_absensi
+SET
+    kode_kecamatan = ?,
+    kode_desa = ?,
+    mac_address = ?,
+    latitude = ?,
+    longitude = ?,
+    sync_status = ?
+WHERE user_id = ?;
+
+updateSyncStatusByUserId:
+UPDATE verifikasi_absensi
+SET sync_status = ?
+WHERE user_id = ?;
+
+deleteAllVerifikasiAbsensi:
+DELETE FROM verifikasi_absensi;
+
+deleteVerifikasiByUserId:
+DELETE FROM verifikasi_absensi WHERE user_id = ?;

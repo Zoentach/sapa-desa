@@ -1,5 +1,7 @@
 package id.go.tapselkab.sapa_desa.core.data.network
 
+import id.go.tapselkab.sapa_desa.core.data.local.model.VerifikasiAbsensiModel
+import id.go.tapselkab.sapa_desa.core.data.local.model.VerifikasiAbsensiResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -20,6 +22,10 @@ interface AuthApiService {
     suspend fun getUser(token: String): UserResponse
 
     suspend fun getPerangkat(token: String): List<PerangkatModel>?
+
+    suspend fun getVerifikasiAbsensi(token: String): List<VerifikasiAbsensiModel>?
+
+    suspend fun sendVerifikasiAbsensi(token: String, data: VerifikasiAbsensiModel): Boolean
 
     suspend fun insertAbsensiWithImages(
         token: String,
@@ -122,6 +128,50 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             throw Exception("Kesalahan server saat memuat user")
         } catch (e: Exception) {
             throw Exception("Terjadi kesalahan saat memuat data perangkat: ${e.message}")
+        }
+    }
+
+    override suspend fun getVerifikasiAbsensi(token: String): List<VerifikasiAbsensiModel>? {
+        return try {
+            val response = client.get(NetworkModule.apiUrl("/api/verifikasi-absensi")) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                    append(HttpHeaders.Accept, "application/json")
+                }
+            }
+
+            if (!response.status.isSuccess()) {
+                throw Exception("Gagal mengambil data verifikasi absensi: ${response.status}")
+            }
+
+            val result = response.body<VerifikasiAbsensiResponse<List<VerifikasiAbsensiModel>>>()
+
+            result.data
+
+        } catch (e: ClientRequestException) {
+            throw Exception("Token tidak valid atau expired")
+        } catch (e: ServerResponseException) {
+            throw Exception("Kesalahan server saat memuat verifikasi absensi")
+        } catch (e: Exception) {
+            throw Exception("Terjadi kesalahan saat memuat data verifikasi absensi: ${e.message}")
+        }
+    }
+
+    override suspend fun sendVerifikasiAbsensi(token: String, data: VerifikasiAbsensiModel): Boolean {
+        return try {
+            val response = client.post(NetworkModule.apiUrl("/api/verifikasi-absensi")) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                    append(HttpHeaders.Accept, "application/json")
+                }
+                setBody(data)
+            }
+
+            response.status.isSuccess()
+
+        } catch (e: Exception) {
+            throw Exception("Kesalahan saat mengirim data: ${e.message}")
+            false
         }
     }
 

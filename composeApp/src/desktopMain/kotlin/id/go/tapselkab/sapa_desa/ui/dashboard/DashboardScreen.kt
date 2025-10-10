@@ -31,59 +31,57 @@ import java.io.File
 fun DashboardScreen(
     viewModel: DashboardViewModel = koinInject(),
     onNavigateToPerangkat: (perangkat: PerangkatEntity) -> Unit,
+    onNavigateToVerifikasiAbsensi: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
 
 
     val perangkatDesa by viewModel.perangkatDesa.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
-    val macAddress by viewModel.macAddress.collectAsState()
+    val verifikasiAbsensi by viewModel.verifikasiAbsensi.collectAsState()
 
-    var showMacAddressDialog by remember { mutableStateOf(false) }
-    var showAlertDialog by remember { mutableStateOf(false) }
+    // var showAlertDialog by remember { mutableStateOf(false) }
+    var verifikasiAlertDialog by remember { mutableStateOf(false) }
     var alertMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentUser()
-        viewModel.getMacAddress()
     }
 
-    LaunchedEffect(currentUser) {
-        currentUser?.let {
-            if (it.macAddress == null) {
-                showMacAddressDialog = true
-            }
-        }
-    }
+//    LaunchedEffect(currentUser) {
+//        currentUser?.let {
+//            if (it.macAddress == null) {
+//                showMacAddressDialog = true
+//            }
+//        }
+//    }
 
-    if (showMacAddressDialog) {
+    if (verifikasiAlertDialog) {
 
         AlertDialogCustom(
             message = "Daftarkan perangkat ini ke Server ?",
             onCancel = {
-                showMacAddressDialog = false
+                verifikasiAlertDialog = false
             },
             onOke = {
-                showMacAddressDialog = false
-                macAddress?.let {
-                    viewModel.updateMacAddress(it)
-                }
+                verifikasiAlertDialog = false
+                onNavigateToVerifikasiAbsensi()
             },
         )
     }
 
-    if (showAlertDialog) {
+    /* if (showAlertDialog) {
 
-        AlertDialogCustom(
-            message = alertMessage,
-            onCancel = {
-                showAlertDialog = false
-            },
-            onOke = {
-                showAlertDialog = false
-            },
-        )
-    }
+         AlertDialogCustom(
+             message = alertMessage,
+             onCancel = {
+                 showAlertDialog = false
+             },
+             onOke = {
+                 showAlertDialog = false
+             },
+         )
+     }*/
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -100,7 +98,7 @@ fun DashboardScreen(
 
             headerDashBoard(
                 onLogOut = {
-                     currentUser?.let { user ->
+                    currentUser?.let { user ->
                         if (user.token == "default") {
                             alertMessage = "Anda login dengan kredensial, keluar aplikasi tidak diperlukan"
                             showAlertDialog = true
@@ -122,20 +120,11 @@ fun DashboardScreen(
                 BaganPerangkat(
                     perangkats = perangkatDesa,
                     onSelected = {
-                        currentUser?.let { user ->
-                            if (user.macAddress != null) {
-                                if (user.macAddress != macAddress) {
-                                    alertMessage =
-                                        "Sistem mendeteksi ini bukan perangkat Anda ${user.macAddress} and $macAddress"
-                                    showAlertDialog = true
-                                } else {
-                                    onNavigateToPerangkat(it)
-                                }
-                            } else {
-                                showMacAddressDialog = true
-                            }
+                        if (verifikasiAbsensi != null) {
+                            onNavigateToPerangkat(it)
+                        } else {
+                            verifikasiAlertDialog = true
                         }
-
                     }
                 )
             }
