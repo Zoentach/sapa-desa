@@ -59,13 +59,66 @@ class DashboardRepository(
                         namaJabatan = model.nama_jabatan
                     )
                 }
-
                 // Ambil kembali data yang sudah diinsert dan kembalikan
                 return db.perangkatDesaQueries
                     .selectAllPerangkatDesa()
                     .executeAsList()
                     .map { it.toEntity() }
             }
+        } catch (e: Exception) {
+            println("User fetch failed: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun perbaharuiAparaturDesa(): List<PerangkatEntity>? {
+        return try {
+            val user = getCurrentUser()
+            val token = user?.token
+
+            if (token.isNullOrBlank()) {
+                println("User fetch failed: Token tidak tersedia")
+                return null
+            }
+
+            // Hapus Semua perangkat
+            val perangkats = db.perangkatDesaQueries
+                .deleteAllPerangkatDesa()
+
+            val apiPerangkats = api.getPerangkat(
+                token = token
+            )
+            // Jika API mengembalikan data, simpan ke database
+            apiPerangkats?.forEach { model ->
+                db.perangkatDesaQueries.insertPerangkatDesa(
+                    id = model.id.toLong(),
+                    nama = model.nama,
+                    nipd = model.nipd,
+                    kodeKecamatan = model.kode_kecamatan,
+                    kodeDesa = model.kode_desa,
+                    kodeJabatan = model.kode_jabatan,
+                    mulai = model.mulai,
+                    berakhir = model.berakhir,
+                    nik = model.nik,
+                    tempatLahir = model.tempat_lahir,
+                    tanggalLahir = model.tanggal_lahir,
+                    skId = model.sk_id?.toLong(),
+                    pendidikanId = model.pendidikan_id?.toLong(),
+                    jenisKelamin = model.jenis_kelamin,
+                    agama = model.agama,
+                    noTelp = model.no_telp,
+                    statusJabatan = model.status_jabatan,
+                    statusKeaktifan = model.status_keaktifan,
+                    namaJabatan = model.nama_jabatan
+                )
+            }
+
+            // Ambil kembali data yang sudah diinsert dan kembalikan
+            return db.perangkatDesaQueries
+                .selectAllPerangkatDesa()
+                .executeAsList()
+                .map { it.toEntity() }
+
         } catch (e: Exception) {
             println("User fetch failed: ${e.message}")
             null

@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,10 +20,10 @@ import androidx.compose.ui.unit.sp
 import kotlinproject.composeapp.generated.resources.*
 import kotlinproject.composeapp.generated.resources.Res
 import id.go.tapselkab.sapa_desa.ui.component.dialog.AlertDialogCustom
+import id.go.tapselkab.sapa_desa.ui.component.dialog.PengaturanDialog
 import id.go.tapselkab.sapa_desa.ui.entity.PerangkatEntity
 import id.go.tapselkab.sapa_desa.ui.perangkat.ImagePerangkatCard
 import id.go.tapselkab.sapa_desa.utils.file.getFile
-import id.go.tapselkab.sapa_desa.utils.macaddress.getMyMacAddress
 import org.jetbrains.compose.resources.Font
 import org.koin.compose.koinInject
 import java.io.File
@@ -43,6 +44,7 @@ fun DashboardScreen(
     var showAlertDialog by remember { mutableStateOf(false) }
     var verifikasiAlertDialog by remember { mutableStateOf(false) }
     var alertMessage by remember { mutableStateOf("") }
+    var showPengaturan by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentUser()
@@ -78,6 +80,42 @@ fun DashboardScreen(
         )
     }
 
+    if (showPengaturan) {
+        PengaturanDialog(
+            onPerbaharuiClick = {
+                showPengaturan = false
+                viewModel.perbaharuiPerangkatDesa()
+            },
+            onSinkronisasiClick = {
+                showPengaturan = false
+                onNavigateToVerifikasiAbsensi(
+                    currentUser?.id ?: 0,
+                    currentUser?.token ?: ""
+                )
+            },
+            onKeluarClick = {
+                showPengaturan = false
+                if (currentUser != null) {
+                    currentUser?.let { user ->
+                        if (user.token == "default") {
+                            alertMessage = "Anda login dengan kredensial, keluar aplikasi tidak diperlukan"
+                            showAlertDialog = true
+                        } else {
+                            viewModel.logOut()
+                            onNavigateBack()
+                        }
+                    }
+                } else {
+                    viewModel.logOut()
+                    onNavigateBack()
+                }
+            },
+            onDismiss = {
+                showPengaturan = false
+            }
+        )
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -92,22 +130,8 @@ fun DashboardScreen(
         ) {
 
             headerDashBoard(
-                onLogOut = {
-
-                    if (currentUser != null) {
-                        currentUser?.let { user ->
-                            if (user.token == "default") {
-                                alertMessage = "Anda login dengan kredensial, keluar aplikasi tidak diperlukan"
-                                showAlertDialog = true
-                            } else {
-                                viewModel.logOut()
-                                onNavigateBack()
-                            }
-                        }
-                    } else {
-                        viewModel.logOut()
-                        onNavigateBack()
-                    }
+                onPengaturan = {
+                    showPengaturan = !showPengaturan
                 },
             )
 
@@ -160,7 +184,7 @@ fun DashboardScreen(
 
 @Composable
 fun headerDashBoard(
-    onLogOut: () -> Unit
+    onPengaturan: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -174,17 +198,16 @@ fun headerDashBoard(
             modifier = Modifier
                 .padding(32.dp),
             onClick = {
-                onLogOut()
-
+                onPengaturan()
             },
         ) {
 
             Text(
-                text = "Keluar"
+                text = "Pengaturan"
             )
 
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.Logout,
+                imageVector = Icons.Default.Settings,
                 contentDescription = ""
             )
         }

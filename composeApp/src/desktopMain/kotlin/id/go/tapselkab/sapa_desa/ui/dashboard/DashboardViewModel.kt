@@ -62,7 +62,17 @@ class DashboardViewModel(
             try {
                 _perangkatDesa.value = dashboarRepository.getPerangkatDesa() ?: emptyList()
 
-                println(_perangkatDesa.value.toString())
+            } catch (e: Exception) {
+                print(e.message)
+            }
+        }
+    }
+
+    fun perbaharuiPerangkatDesa() {
+        coroutineScope.launch {
+            try {
+                _perangkatDesa.value = dashboarRepository.perbaharuiAparaturDesa() ?: emptyList()
+
             } catch (e: Exception) {
                 print(e.message)
             }
