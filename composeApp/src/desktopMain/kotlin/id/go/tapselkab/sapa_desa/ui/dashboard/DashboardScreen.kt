@@ -31,7 +31,7 @@ import java.io.File
 fun DashboardScreen(
     viewModel: DashboardViewModel = koinInject(),
     onNavigateToPerangkat: (perangkat: PerangkatEntity) -> Unit,
-    onNavigateToVerifikasiAbsensi: () -> Unit,
+    onNavigateToVerifikasiAbsensi: (userId: Int, token: String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
 
@@ -57,7 +57,10 @@ fun DashboardScreen(
             },
             onOke = {
                 verifikasiAlertDialog = false
-                onNavigateToVerifikasiAbsensi()
+                onNavigateToVerifikasiAbsensi(
+                    currentUser?.id ?: 0,
+                    currentUser?.token ?: ""
+                )
             },
         )
     }
@@ -120,19 +123,22 @@ fun DashboardScreen(
                         modifier = Modifier
                             .padding(32.dp),
                         onClick = {
-                            onNavigateToVerifikasiAbsensi()
+                            onNavigateToVerifikasiAbsensi(
+                                currentUser?.id ?: 0,
+                                currentUser?.token ?: ""
+                            )
 
                         },
                     ) {
 
                         Text(
-                            text = "Daftakan Perangkat"
+                            text = "Lanjut Sinkronisasi"
                         )
 
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = ""
-                        )
+//                        Icon(
+//                            imageVector = Icons.AutoMirrored.Filled.Logout,
+//                            contentDescription = ""
+//                        )
                     }
                 } else {
                     BaganPerangkat(

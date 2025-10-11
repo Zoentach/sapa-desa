@@ -28,6 +28,7 @@ fun DasGraph() {
             credentialLogin()
             dashboard()
             perangkat()
+            verifikasi()
         }
     }
 

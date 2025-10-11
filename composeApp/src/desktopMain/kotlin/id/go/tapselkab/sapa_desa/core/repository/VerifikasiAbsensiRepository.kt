@@ -2,6 +2,8 @@ package id.go.tapselkab.sapa_desa.core.repository
 
 import id.go.tapselkab.sapa_desa.core.data.network.AuthApiService
 import id.go.tapselkab.database.sipature_db
+import id.go.tapselkab.sapa_desa.core.data.network.GeoLocation
+import id.go.tapselkab.sapa_desa.core.data.network.LocationApiService
 import id.go.tapselkab.sapa_desa.ui.entity.VerifikasiAbsensiEntity
 import id.go.tapselkab.sapa_desa.ui.entity.toEntity
 import id.go.tapselkab.sapa_desa.ui.entity.toModel
@@ -9,6 +11,7 @@ import id.go.tapselkab.sapa_desa.ui.entity.toModel
 class VerifikasiAbsensiRepository(
     private val db: sipature_db,
     private val api: AuthApiService,
+    private val location: LocationApiService
 ) {
 
     suspend fun getVerifikasiAbsensi(userId: Long, token: String): VerifikasiAbsensiEntity? {
@@ -78,10 +81,16 @@ class VerifikasiAbsensiRepository(
             )
 
             if (response) {
-                db.verifikasiAbsensiQueries.updateSyncStatusByUserId(
+                db.verifikasiAbsensiQueries.insertOrReplaceVerifikasi(
+                    user_id = verifikasi.userId,
+                    kode_kecamatan = verifikasi.kodeKecamatan,
+                    kode_desa = verifikasi.kodeDesa,
+                    mac_address = verifikasi.macAddress,
+                    latitude = verifikasi.latitude,
+                    longitude = verifikasi.longitude,
                     sync_status = 1,
-                    user_id = verifikasi.userId
-                )
+
+                    )
                 true
             } else {
                 false
@@ -111,5 +120,13 @@ class VerifikasiAbsensiRepository(
 
     suspend fun deleteAll() {
         db.verifikasiAbsensiQueries.deleteAllVerifikasiAbsensi()
+    }
+
+    suspend fun getMyLocation(): GeoLocation {
+        return try {
+            location.getCurrentLocation()
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }

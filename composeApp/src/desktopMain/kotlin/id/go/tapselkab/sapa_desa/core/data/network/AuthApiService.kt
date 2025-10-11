@@ -157,21 +157,40 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
         }
     }
 
-    override suspend fun sendVerifikasiAbsensi(token: String, data: VerifikasiAbsensiModel): Boolean {
+    override suspend fun sendVerifikasiAbsensi(
+        token: String,
+        data: VerifikasiAbsensiModel
+    ): Boolean {
         return try {
-            val response = client.post(NetworkModule.apiUrl("/api/verifikasi-absensi")) {
+            val response = client.submitFormWithBinaryData(
+                url = NetworkModule.apiUrl("/api/verifikasi-absensi"),
+                formData = formData {
+                    append("user_id", data.user_id.toString())
+                    append("kode_kecamatan", data.kode_kecamatan)
+                    append("kode_desa", data.kode_desa)
+                    append("mac_address", data.mac_address.toString())
+
+                    // latitude & longitude bisa null, jadi pakai let
+                    append("latitude", data.latitude.toString())
+                    append("longitude", data.longitude.toString())
+                }
+            ) {
                 headers {
                     append(HttpHeaders.Authorization, "Bearer $token")
                     append(HttpHeaders.Accept, "application/json")
                 }
-                setBody(data)
             }
 
-            response.status.isSuccess()
+            if (!response.status.isSuccess()) {
+                throw Exception("Gagal mengirim verifikasi absensi: ${response.status}")
+            }
+
+            println("Verifikasi absensi berhasil dikirim: ${response.status}")
+            true
 
         } catch (e: Exception) {
+            println("Gagal mengirim verifikasi absensi: ${e.message}")
             throw Exception("Kesalahan saat mengirim data: ${e.message}")
-            false
         }
     }
 

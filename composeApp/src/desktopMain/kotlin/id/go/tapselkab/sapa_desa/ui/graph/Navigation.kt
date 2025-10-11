@@ -67,9 +67,12 @@ fun NavGraphBuilder.dashboard() {
                     perangkat
                 )
             },
-            onNavigateToVerifikasiAbsensi = {
+            onNavigateToVerifikasiAbsensi = { userId, token ->
                 navigate.navigate(
-                    VerifikasiAbsensi
+                    VerifikasiAbsensi(
+                        userId = userId,
+                        token = token
+                    )
                 )
             },
             onNavigateBack = {
@@ -81,11 +84,16 @@ fun NavGraphBuilder.dashboard() {
 
 
 fun NavGraphBuilder.verifikasi() {
-    composable<VerifikasiAbsensi> {
+    composable<VerifikasiAbsensi> { backStackEntry ->
 
+        val verifikasiAbsensi = backStackEntry.toRoute<VerifikasiAbsensi>()
         val navigate = LocalNavigation.current
 
-        VerifikasiAbsensiScreen()
+        VerifikasiAbsensiScreen(
+            onNavigateBack = {
+                navigate.navigateUp()
+            }, verifikasiAbsensi = verifikasiAbsensi
+        )
 
     }
 }

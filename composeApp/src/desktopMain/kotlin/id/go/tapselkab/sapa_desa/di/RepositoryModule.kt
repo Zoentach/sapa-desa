@@ -12,5 +12,5 @@ val repositoryModule = module {
     single { AbsensiRepository(get(), get()) }
     single { AuthRepository(get(), get(), get()) }
     single { DashboardRepository(get(), get()) }
-    single { VerifikasiAbsensiRepository(get(), get()) }
+    single { VerifikasiAbsensiRepository(get(), get(), get()) }
 }

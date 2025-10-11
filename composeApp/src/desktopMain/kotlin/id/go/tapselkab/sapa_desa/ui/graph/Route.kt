@@ -16,6 +16,6 @@ object CredentialLogin
 object Dashboard
 
 @Serializable
-object VerifikasiAbsensi
+data class VerifikasiAbsensi(val userId: Int, val token: String)
 
 //navigasi

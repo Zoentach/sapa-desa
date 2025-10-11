@@ -61,6 +61,8 @@ class DashboardViewModel(
         coroutineScope.launch {
             try {
                 _perangkatDesa.value = dashboarRepository.getPerangkatDesa() ?: emptyList()
+
+                println(_perangkatDesa.value.toString())
             } catch (e: Exception) {
                 print(e.message)
             }
@@ -86,6 +88,4 @@ class DashboardViewModel(
             }
         }
     }
-
-
 }
