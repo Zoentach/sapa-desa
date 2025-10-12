@@ -53,6 +53,7 @@ class AuthRepository(
             val user = api.getUser(token)
             db.userQueries.deleteAllUser()
             db.userQueries.insertUser(
+                id = user.id.toLong(),
                 name = user.name,
                 email = user.email,
                 token = token,

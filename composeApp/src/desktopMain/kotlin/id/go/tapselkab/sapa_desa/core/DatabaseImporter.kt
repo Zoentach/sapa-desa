@@ -27,6 +27,7 @@ class DatabaseImporter(
     // Data classes untuk mencocokkan struktur JSON Anda
     @Serializable
     data class UserJson(
+        val id: Int,
         val name: String,
         val email: String,
         val kode_desa: String,
@@ -80,6 +81,7 @@ class DatabaseImporter(
                 // Masukkan data user dari JSON
                 data.users.forEach { userJson ->
                     userQueries.insertUser(
+                        id = userJson.id.toLong(),
                         email = userJson.email,
                         name = userJson.name,
                         token = "default", // Mengatur token ke 'default'

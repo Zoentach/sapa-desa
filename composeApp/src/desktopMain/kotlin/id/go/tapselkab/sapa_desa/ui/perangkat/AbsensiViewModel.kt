@@ -2,12 +2,14 @@ package id.go.tapselkab.sapa_desa.ui.perangkat
 
 import androidx.lifecycle.ViewModel
 import id.go.tapselkab.sapa_desa.core.repository.AbsensiRepository
+import id.go.tapselkab.sapa_desa.core.repository.VerifikasiAbsensiRepository
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiResult
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiStatus
 import id.go.tapselkab.sapa_desa.utils.camera.FaceRecognizerManager
 import id.go.tapselkab.sapa_desa.utils.export.exportCSVToUserLocation
 import id.go.tapselkab.sapa_desa.utils.file.getFile
+import id.go.tapselkab.sapa_desa.utils.macaddress.getMyMacAddress
 import id.go.tapselkab.sapa_desa.utils.time.DateManager
 import id.go.tapselkab.sapa_desa.utils.time.DateManager.thisDay
 import id.go.tapselkab.sapa_desa.utils.time.DateManager.thisMonth
@@ -18,7 +20,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDate
 
-class AbsensiViewModel(private val repository: AbsensiRepository) : ViewModel() {
+class AbsensiViewModel(
+    private val repository: AbsensiRepository,
+    private val verifikasiRepo: VerifikasiAbsensiRepository
+) : ViewModel() {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -50,8 +55,22 @@ class AbsensiViewModel(private val repository: AbsensiRepository) : ViewModel() 
         _thisDay.value = DateManager.getMillisAt0815().thisDay()
     }
 
+    fun setAbsensiResult() {
+        _absensiResult.value = AbsensiResult(
+            status = AbsensiStatus.INITIAL,
+            message = ""
+        )
+    }
+
     fun prosesAbsensi(perangkatId: Int, timeStamp: Long) {
+
         scope.launch {
+
+            _absensiResult.value = AbsensiResult(
+                status = AbsensiStatus.LOADING,
+                message = "Sedang memproses kehadiran ..."
+            )
+
             try {
                 val (isMatch, confidence) = FaceRecognizerManager.cropAllFaces("$perangkatId", "$timeStamp")
 
@@ -72,13 +91,13 @@ class AbsensiViewModel(private val repository: AbsensiRepository) : ViewModel() 
             } catch (e: Exception) {
                 _absensiResult.value = AbsensiResult(
                     AbsensiStatus.FAILED,
-                    "Kesalahan saat proses absensi: ${e.message}"
+                    "Error: ${e.message}"
                 )
             }
         }
     }
 
-    private fun saveAbsensi(userId: Int, timeStamp: Long) {
+    private suspend fun saveAbsensi(userId: Int, timeStamp: Long) {
         val hour = TimeManager.isMorningOrAfternoon(timeStamp)
         val date = DateManager.getMillisAt0815()
 
@@ -141,14 +160,48 @@ class AbsensiViewModel(private val repository: AbsensiRepository) : ViewModel() 
 
     fun sendAbsensi(absensi: AbsensiEntity) {
         scope.launch {
-            val success = repository.sendAbsensiToServer(
-                absensi = absensi,
-                gambarPagi = absensi.absensiPagi?.let { getFile("${absensi.perangkatId}", "$it.jpg") },
-                gambarSore = absensi.absensiSore?.let { getFile("${absensi.perangkatId}", "$it.jpg") }
+
+            val gambarPagiRef = DateUtils.combineDateAndTimeToMillis(
+                date = absensi.tanggal.orEmpty(),
+                time = absensi.absensiPagi.orEmpty()
             )
-            if (success) {
-                absensi.tanggal?.let { repository.updateAbsensiSyncStatus(absensi.perangkatId.toLong(), it, 1) }
-                getAbsensiByPerangkatAndMonth(absensi.perangkatId)
+
+            val gambarSoreRef = DateUtils.combineDateAndTimeToMillis(
+                date = absensi.tanggal.orEmpty(),
+                time = absensi.absensiSore.orEmpty()
+            )
+
+            try {
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.LOADING,
+                    message = "Sedang mengirim absen..."
+                )
+                val macAddress = getMyMacAddress()
+                val location = verifikasiRepo.getMyLocation()
+
+                val success = repository.sendAbsensiToServer(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    macAddress = macAddress.orEmpty(),
+                    absensi = absensi,
+                    gambarPagi = absensi.absensiPagi?.let { getFile("${absensi.perangkatId}", "$gambarPagiRef.jpg") },
+                    gambarSore = absensi.absensiSore?.let { getFile("${absensi.perangkatId}", "$gambarSoreRef.jpg") }
+                )
+                if (success) {
+                    absensi.tanggal?.let { repository.updateAbsensiSyncStatus(absensi.perangkatId.toLong(), it, 1) }
+                    getAbsensiByPerangkatAndMonth(absensi.perangkatId)
+
+                    _absensiResult.value = AbsensiResult(
+                        status = AbsensiStatus.SUCCESS,
+                        message = "Berhasil"
+                    )
+
+                }
+            } catch (e: Exception) {
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.FAILED,
+                    message = "Error: " + e.message.orEmpty()
+                )
             }
         }
     }

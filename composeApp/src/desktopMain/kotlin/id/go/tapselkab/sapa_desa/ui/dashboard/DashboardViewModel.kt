@@ -83,6 +83,7 @@ class DashboardViewModel(
         coroutineScope.launch {
             try {
                 _verifikasiAbsensi.value = verifikasiRepo.getVerifikasiAbsensi(userId = id.toLong(), token = token)
+
             } catch (e: Exception) {
                 print(e.message)
             }

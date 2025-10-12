@@ -29,6 +29,9 @@ interface AuthApiService {
 
     suspend fun insertAbsensiWithImages(
         token: String,
+        latitude: Double,
+        longitude: Double,
+        macAddress: String,
         absensi: AbsensiRequest,
         gambarPagi: File?,
         gambarSore: File?
@@ -36,8 +39,10 @@ interface AuthApiService {
 
     suspend fun insertAbsensiWithLampiran(
         token: String,
+        perangkatId: Long,
+        tanggal: String,
         keterangan: String,
-        lampiran: String
+        lampiran: File
     ): Boolean
 
     suspend fun updateMacAddress(
@@ -197,6 +202,9 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
     //keterangan dan lampiran bernilai default null
     override suspend fun insertAbsensiWithImages(
         token: String,
+        latitude: Double,
+        longitude: Double,
+        macAddress: String,
         absensi: AbsensiRequest,
         gambarPagi: File?,
         gambarSore: File?
@@ -206,6 +214,11 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             val response = client.submitFormWithBinaryData(
                 url = NetworkModule.apiUrl("/api/absensi"),
                 formData = formData {
+
+                    append("latitude", latitude.toString())
+                    append("longitude", longitude.toString())
+                    append("mac_address", macAddress)
+
                     append("perangkat_id", absensi.perangkat_id.toString())
                     append("tanggal", absensi.tanggal)
                     absensi.absensi_pagi?.let { append("absensi_pagi", it.toString()) }
@@ -240,16 +253,47 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
 
             true
         } catch (e: Exception) {
-            throw Exception("Gagal upload absensi: ${e.message}")
+            throw e
         }
     }
 
     override suspend fun insertAbsensiWithLampiran(
         token: String,
+        perangkatId: Long,
+        tanggal: String,
         keterangan: String,
-        lampiran: String
+        lampiran: File
     ): Boolean {
-        return true
+        return try {
+            val response = client.submitFormWithBinaryData(
+                url = NetworkModule.apiUrl("/api/absensi/lampiran"),
+                formData = formData {
+                    append("perangkat_id", perangkatId.toString())
+                    append("tanggal", tanggal)
+                    append("keterangan", keterangan)
+
+                    // Upload file PDF
+                    append("lampiran", lampiran.readBytes(), Headers.build {
+                        append(HttpHeaders.ContentType, "application/pdf")
+                        append(HttpHeaders.ContentDisposition, "filename=\"${lampiran.name}\"")
+                    })
+                }
+            ) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
+
+            if (!response.status.isSuccess()) {
+                val body = response.bodyAsText()
+                throw Exception("Gagal upload lampiran: ${response.status} - $body")
+            }
+
+            true
+        } catch (e: Exception) {
+            println("Error insertAbsensiWithLampiran: ${e.message}")
+            throw e
+        }
     }
 
     override suspend fun updateMacAddress(token: String, macAddress: String): Boolean {

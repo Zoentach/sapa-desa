@@ -1,13 +1,13 @@
 CREATE TABLE absensi (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     perangkat_id INTEGER NOT NULL,
-    kode_desa TEXT,
-    kode_kecamatan TEXT,
-    tanggal TEXT NOT NULL, -- format "YYYY-MM-DD"
-    absensi_pagi TEXT,     -- format "HH:mm:ss"
-    absensi_sore TEXT,     -- format "HH:mm:ss"
-    keterlambatan INTEGER,
-    pulang_cepat INTEGER,
+    tanggal TEXT NOT NULL, -- format: YYYY-MM-DD
+    absensi_pagi TEXT,     -- format: HH:mm:ss
+    absensi_sore TEXT,     -- format: HH:mm:ss
+    keterangan TEXT NOT NULL DEFAULT 'Hadir', -- enum: Hadir, Izin, Sakit, Cuti, Tugas Luar
+    status_kehadiran TEXT NOT NULL DEFAULT 'Pending', -- enum: Pending, Disetujui, Ditolak
+    keterlambatan INTEGER NOT NULL DEFAULT 0,
+    pulang_cepat INTEGER NOT NULL DEFAULT 0,
     sync_status INTEGER NOT NULL DEFAULT 0
 );
 
@@ -15,40 +15,50 @@ CREATE TABLE absensi (
 selectAllAbsensi:
 SELECT * FROM absensi;
 
--- Select by id
+-- Select absensi berdasarkan ID
 selectAbsensiById:
 SELECT * FROM absensi WHERE id = ?;
 
--- Cek absensi berdasarkan tanggal dan perangkat
+-- Cek absensi berdasarkan tanggal dan perangkat (hindari duplikat)
 selectByDate:
 SELECT COUNT(*) FROM absensi
 WHERE tanggal = ? AND perangkat_id = ?;
 
--- Select absensi by user dan range bulan
+-- Select absensi berdasarkan user dan range bulan
 selectAbsensiByUserAndMonth:
 SELECT * FROM absensi
 WHERE perangkat_id = ?
 AND tanggal BETWEEN ? AND ?;
 
--- Insert absensi
-insertAbsensi:
-INSERT INTO absensi (
-    perangkat_id, kode_desa, kode_kecamatan, tanggal,
-    absensi_pagi, absensi_sore, keterlambatan, pulang_cepat, sync_status
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+-- Insert atau replace absensi
+-- Jika sudah ada data untuk tanggal & perangkat yang sama, data akan diperbarui
+insertOrReplaceAbsensi:
+INSERT OR REPLACE INTO absensi (
+    perangkat_id,
+    tanggal,
+    absensi_pagi,
+    absensi_sore,
+    keterangan,
+    status_kehadiran,
+    keterlambatan,
+    pulang_cepat,
+    sync_status
+) VALUES (
+    ?, ?, ?, ?, COALESCE(?, 'Hadir'), COALESCE(?, 'Pending'), 0, 0, 0
+);
 
--- Delete by id
-deleteAbsensiById:
-DELETE FROM absensi WHERE id = ?;
-
--- Update absensi sore
+-- Update absensi sore (ketika user melakukan absen sore)
 updateAbsensiAfternoonByUserAndDate:
 UPDATE absensi
 SET absensi_sore = ?, pulang_cepat = ?, sync_status = ?
 WHERE perangkat_id = ? AND tanggal = ?;
 
--- Update status sinkronisasi
+-- Update status sinkronisasi (setelah berhasil dikirim ke server)
 updateAbsensiSyncStatus:
 UPDATE absensi
 SET sync_status = ?
 WHERE perangkat_id = ? AND tanggal = ?;
+
+-- Delete absensi berdasarkan id
+deleteAbsensiById:
+DELETE FROM absensi WHERE id = ?;

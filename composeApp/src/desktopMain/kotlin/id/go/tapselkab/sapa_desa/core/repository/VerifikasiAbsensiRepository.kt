@@ -22,7 +22,7 @@ class VerifikasiAbsensiRepository(
                 return null
             }
 
-            // 1️⃣ Ambil dari lokal terlebih dahulu
+            // 1️Ambil dari lokal terlebih dahulu
             val localData = db.verifikasiAbsensiQueries
                 .selectVerifikasiByUserId(userId)
                 .executeAsOneOrNull()
@@ -60,11 +60,11 @@ class VerifikasiAbsensiRepository(
                 return entity
             }
 
-            // 3️⃣ Jika di server juga tidak ada, return null
+            // Jika di server juga tidak ada, return null
             null
 
         } catch (e: Exception) {
-            println("⚠️ Gagal mengambil VerifikasiAbsensi: ${e.message}")
+            println("Gagal mengambil VerifikasiAbsensi: ${e.message}")
             null
         }
     }

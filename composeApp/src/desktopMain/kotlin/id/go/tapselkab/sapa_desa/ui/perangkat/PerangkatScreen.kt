@@ -15,9 +15,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import id.go.tapselkab.sapa_desa.ui.component.dialog.AlertBoxDialog
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.geofish
 import id.go.tapselkab.sapa_desa.ui.component.dialog.CameraDialog
+import id.go.tapselkab.sapa_desa.ui.component.dialog.LoadingDialog
+import id.go.tapselkab.sapa_desa.ui.component.dialog.UploadLampiranDialog
+import id.go.tapselkab.sapa_desa.ui.entity.AbsensiStatus
 import id.go.tapselkab.sapa_desa.ui.entity.PerangkatEntity
 import id.go.tapselkab.sapa_desa.utils.camera.CameraManager
 import id.go.tapselkab.sapa_desa.utils.camera.saveReferenceFace
@@ -43,9 +47,21 @@ fun PerangkatScreen(
 
     var absensiMessage by remember { mutableStateOf("Belum Absen") }
 
-    LaunchedEffect(absensiResult) {
-        absensiMessage = absensiResult.message
+    if (absensiResult.status == AbsensiStatus.LOADING) {
+        LoadingDialog(absensiResult.message)
     }
+
+    if (absensiResult.status == AbsensiStatus.FAILED) {
+        AlertBoxDialog(
+            message = absensiResult.message,
+            onDismiss = {
+                absensiViewModel.setAbsensiResult()
+            }
+        )
+    }
+
+
+
 
     if (showCameraFaceRef) {
         CameraDialog(

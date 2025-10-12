@@ -21,9 +21,9 @@ SELECT * FROM user WHERE id = :id AND token = :token;
 -- Sisipkan atau ganti pengguna baru
 insertUser:
 REPLACE INTO user (
-    email, name, token
+    id, email, name, token
 ) VALUES (
-    :email, :name, :token
+    :id, :email, :name, :token
 );
 
 -- Perbarui data pengguna berdasarkan ID

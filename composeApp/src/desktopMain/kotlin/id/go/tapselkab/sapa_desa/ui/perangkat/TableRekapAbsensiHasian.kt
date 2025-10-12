@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import attanceTextStatus
 import id.go.tapselkab.sapa_desa.di.viewModelModule
 import id.go.tapselkab.sapa_desa.ui.component.dialog.MonthPicker
+import id.go.tapselkab.sapa_desa.ui.component.dialog.UploadLampiranDialog
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
 import id.go.tapselkab.sapa_desa.utils.time.DateManager
 import org.koin.compose.koinInject
@@ -32,6 +33,7 @@ fun RekapAbsensiHarian(
     perangkatId: Int,
     viewModel: AbsensiViewModel,
 ) {
+
 
     LaunchedEffect(Unit) {
         viewModel.initScreen()
@@ -45,9 +47,22 @@ fun RekapAbsensiHarian(
 
     var selectedMonth by remember { mutableStateOf(LocalDate.now().monthValue) }
     var selectedYear by remember { mutableStateOf(LocalDate.now().year) }
-
+    var showUploadLampiran by remember { mutableStateOf(false) }
     var showMonthPicker by remember {
         mutableStateOf(false)
+    }
+
+
+
+    if (showUploadLampiran) {
+        UploadLampiranDialog(
+            onDismiss = {
+                showUploadLampiran = false
+            },
+            onUpload = { date, jenis, filePath, file ->
+
+            }
+        )
     }
 
     if (showMonthPicker) {
@@ -104,25 +119,38 @@ fun RekapAbsensiHarian(
                 )
             }
 
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                OutlinedButton(
+                    onClick = {
+                        showUploadLampiran = !showUploadLampiran
+                    },
+                    content = {
+                        Text("Ajukan Izin")
+                    }
+                )
+            }
             OutlinedButton(
                 onClick = {
                     viewModel.exportAbsensi(absensis)
                 },
                 content = {
-                    Text("Export")
+                    Text("Ekspor")
                 }
             )
         }
-        Spacer(Modifier.height(6.dp))
-        HeaderTableAbsensi()
-        absensis.forEach {
-            BodyTableAbsensi(
-                absensi = it,
-                onSendabsensi = { absensi ->
-                    viewModel.sendAbsensi(absensi)
-                }
-            )
-        }
+    }
+    Spacer(Modifier.height(6.dp))
+    HeaderTableAbsensi()
+    absensis.forEach {
+        BodyTableAbsensi(
+            absensi = it,
+            onSendabsensi = { absensi ->
+                viewModel.sendAbsensi(absensi)
+            }
+        )
     }
 }
 

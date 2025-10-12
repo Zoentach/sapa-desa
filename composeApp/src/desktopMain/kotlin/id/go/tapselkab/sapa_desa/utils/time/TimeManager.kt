@@ -70,8 +70,9 @@ object TimeManager {
     }
 
     fun getCurrentTimeMillis(): Long? {
-        return try {
-            System.currentTimeMillis()
+        try {
+            val millis = System.currentTimeMillis()
+            return (millis / 1000) * 1000
         } catch (e: Exception) {
             throw e
         }

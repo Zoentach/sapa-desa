@@ -9,7 +9,7 @@ import org.koin.dsl.module
 
 val viewModelModule = module {
     viewModel { AuthViewModel(get()) }
-    viewModel { AbsensiViewModel(get()) } // get() otomatis ambil absensiRepository
+    viewModel { AbsensiViewModel(get(),get()) } // get() otomatis ambil absensiRepository
     viewModel { DashboardViewModel(get(), get(), get()) }
     viewModel { VerifikasiViewModel(get()) }
 }
