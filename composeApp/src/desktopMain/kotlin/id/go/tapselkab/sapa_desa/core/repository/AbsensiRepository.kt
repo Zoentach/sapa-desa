@@ -40,6 +40,30 @@ class AbsensiRepository(
         }
     }
 
+
+    suspend fun ajukanAbsensiIzin(
+        perangkatId: Long,
+        tanggal: String,
+        keterangan: String,
+        lampiran: File
+    ): Boolean {
+
+        val user = getCurrentUser()
+        val token = user?.token ?: ""
+
+        return try {
+            api.insertAbsensiWithLampiran(
+                token = token,
+                perangkatId = perangkatId,
+                tanggal = tanggal,
+                keterangan = keterangan,
+                lampiran = lampiran
+            )
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
     suspend fun insertAbsensi(
         perangkatId: Long,
         tanggal: String,
@@ -50,23 +74,46 @@ class AbsensiRepository(
         syncStatus: Long
     ) {
         try {
-            db.absensiQueries.insertAbsensi(
+            db.absensiQueries.insertOrReplaceAbsensi(
                 perangkat_id = perangkatId,
                 tanggal = tanggal,
                 absensi_pagi = pagi,
                 absensi_sore = sore,
                 keterlambatan = keterlambatan,
                 pulang_cepat = pulangCepat,
+                keterangan = "Hadir",
+                status_kehadiran = "Disetujui",
                 sync_status = syncStatus,
-                kode_desa = null,
-                kode_kecamatan = null
             )
         } catch (e: Exception) {
             throw e
         }
     }
 
-    
+    suspend fun insertAbsensiIzin(
+        perangkatId: Long,
+        tanggal: String,
+        keterangan: String,
+        syncStatus: Long
+    ) {
+        try {
+            db.absensiQueries.insertOrReplaceAbsensi(
+                perangkat_id = perangkatId,
+                tanggal = tanggal,
+                absensi_pagi = null,
+                absensi_sore = null,
+                keterangan = keterangan,
+                status_kehadiran = "Pending",
+                keterlambatan = 0,
+                pulang_cepat = 0,
+                sync_status = syncStatus,
+            )
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+
     suspend fun updateAfternoonAbsensi(
         tanggal: String,
         perangkatId: Long,

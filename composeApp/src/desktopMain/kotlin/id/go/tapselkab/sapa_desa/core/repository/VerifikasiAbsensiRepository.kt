@@ -43,16 +43,16 @@ class VerifikasiAbsensiRepository(
             val remoteData = api.getVerifikasiAbsensi(token)
 
             if (remoteData != null) {
-                val entity = remoteData.firstOrNull()?.toEntity(1)
+                val entity = remoteData.toEntity(1)
 
                 // Simpan ke lokal
                 db.verifikasiAbsensiQueries.insertOrReplaceVerifikasi(
-                    user_id = entity?.userId,
-                    kode_desa = entity?.kodeDesa ?: "",
-                    kode_kecamatan = entity?.kodeKecamatan ?: "",
-                    mac_address = entity?.macAddress,
-                    latitude = entity?.latitude,
-                    longitude = entity?.longitude,
+                    user_id = entity.userId,
+                    kode_desa = entity.kodeDesa ?: "",
+                    kode_kecamatan = entity.kodeKecamatan ?: "",
+                    mac_address = entity.macAddress,
+                    latitude = entity.latitude,
+                    longitude = entity.longitude,
                     sync_status = 1 // karena sudah sinkron dari server
                 )
 

@@ -61,8 +61,6 @@ fun PerangkatScreen(
     }
 
 
-
-
     if (showCameraFaceRef) {
         CameraDialog(
             onDismiss = {

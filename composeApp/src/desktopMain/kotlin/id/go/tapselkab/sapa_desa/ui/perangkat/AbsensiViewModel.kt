@@ -18,6 +18,7 @@ import id.go.tapselkab.sapa_desa.utils.time.TimeManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
 import java.time.LocalDate
 
 class AbsensiViewModel(
@@ -204,6 +205,51 @@ class AbsensiViewModel(
                 )
             }
         }
+    }
+
+    fun ajukanAbsensiIzin(
+        perangkatId: Long,
+        tanggal: String,
+        keterangan: String,
+        lampiran: File
+    ) {
+
+        _absensiResult.value = AbsensiResult(
+            status = AbsensiStatus.LOADING,
+            message = "Sedang memproses kehadiran ..."
+        )
+
+        scope.launch {
+            try {
+                val success = repository.ajukanAbsensiIzin(
+                    perangkatId = perangkatId,
+                    tanggal = tanggal,
+                    keterangan = keterangan,
+                    lampiran = lampiran
+                )
+
+                if (success) {
+                    repository.insertAbsensiIzin(
+                        perangkatId = perangkatId,
+                        tanggal = tanggal,
+                        keterangan = keterangan,
+                        syncStatus = 1
+                    )
+                }
+
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.SUCCESS,
+                    message = "Berhasil"
+                )
+
+            } catch (e: Exception) {
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.FAILED,
+                    message = "Error: " + e.message.orEmpty()
+                )
+            }
+        }
+
     }
 
     fun exportAbsensi(absensis: List<AbsensiEntity>) {

@@ -14,7 +14,7 @@ data class VerifikasiAbsensiModel(
 
 @Serializable
 data class VerifikasiAbsensiResponse<T>(
-    val status: Boolean,
+    val status: String,
     val message: String? = null,
     val data: T? = null
 )

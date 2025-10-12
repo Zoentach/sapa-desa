@@ -6,8 +6,8 @@ CREATE TABLE absensi (
     absensi_sore TEXT,     -- format: HH:mm:ss
     keterangan TEXT NOT NULL DEFAULT 'Hadir', -- enum: Hadir, Izin, Sakit, Cuti, Tugas Luar
     status_kehadiran TEXT NOT NULL DEFAULT 'Pending', -- enum: Pending, Disetujui, Ditolak
-    keterlambatan INTEGER NOT NULL DEFAULT 0,
-    pulang_cepat INTEGER NOT NULL DEFAULT 0,
+    keterlambatan INTEGER,
+    pulang_cepat INTEGER,
     sync_status INTEGER NOT NULL DEFAULT 0
 );
 
@@ -44,7 +44,7 @@ INSERT OR REPLACE INTO absensi (
     pulang_cepat,
     sync_status
 ) VALUES (
-    ?, ?, ?, ?, COALESCE(?, 'Hadir'), COALESCE(?, 'Pending'), 0, 0, 0
+    ?, ?, ?, ?, ?, ?, ?, ?, ?
 );
 
 -- Update absensi sore (ketika user melakukan absen sore)

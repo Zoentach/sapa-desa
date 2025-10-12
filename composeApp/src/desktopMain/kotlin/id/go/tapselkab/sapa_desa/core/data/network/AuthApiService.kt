@@ -23,7 +23,7 @@ interface AuthApiService {
 
     suspend fun getPerangkat(token: String): List<PerangkatModel>?
 
-    suspend fun getVerifikasiAbsensi(token: String): List<VerifikasiAbsensiModel>?
+    suspend fun getVerifikasiAbsensi(token: String): VerifikasiAbsensiModel?
 
     suspend fun sendVerifikasiAbsensi(token: String, data: VerifikasiAbsensiModel): Boolean
 
@@ -136,7 +136,7 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
         }
     }
 
-    override suspend fun getVerifikasiAbsensi(token: String): List<VerifikasiAbsensiModel>? {
+    override suspend fun getVerifikasiAbsensi(token: String): VerifikasiAbsensiModel? {
         return try {
             val response = client.get(NetworkModule.apiUrl("/api/verifikasi-absensi")) {
                 headers {
@@ -149,7 +149,7 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
                 throw Exception("Gagal mengambil data verifikasi absensi: ${response.status}")
             }
 
-            val result = response.body<VerifikasiAbsensiResponse<List<VerifikasiAbsensiModel>>>()
+            val result = response.body<VerifikasiAbsensiResponse<VerifikasiAbsensiModel>>()
 
             result.data
 
@@ -248,7 +248,7 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                throw Exception("Gagal insert absensi: ${response.status}")
+                throw Exception("Error: ${response.status} -  ${response.status.value} ")
             }
 
             true
