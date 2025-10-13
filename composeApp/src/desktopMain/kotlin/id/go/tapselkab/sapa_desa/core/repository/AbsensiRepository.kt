@@ -174,7 +174,9 @@ class AbsensiRepository(
                     absensiSore = absensi.absensi_sore,
                     keterlambatan = absensi.keterlambatan?.toInt(),
                     pulangCepat = absensi.pulang_cepat?.toInt(),
-                    syncStatus = absensi.sync_status.toInt()
+                    syncStatus = absensi.sync_status.toInt(),
+                    keterangan = absensi.keterangan,
+                    statusKehadiran = absensi.status_kehadiran
                 )
             }
         } catch (e: Exception) {

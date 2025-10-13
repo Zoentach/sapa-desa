@@ -16,8 +16,8 @@ data class AbsensiEntity(
     val id: Int,
     val perangkatId: Int,
     val tanggal: String? = null,  //format : "YYYY-MM-DD
-    val kodeDesa: String? = null,  //tidak dikirim ke server, sudah dapat dari nilai default server
-    val kodeKec: String? = null,
+    val statusKehadiran: String? = null,  //tidak dikirim ke server, sudah dapat dari nilai default server
+    val keterangan: String? = null,
     val absensiPagi: String? = null,
     val absensiSore: String? = null,
     val keterlambatan: Int? = null,
@@ -35,19 +35,3 @@ fun AbsensiEntity.toRequest(): AbsensiRequest {
         pulang_cepat = this.pulangCepat,
     )
 }
-
-//
-//fun Absensi.toEntity(): AbsensiEntity {
-//    return absensiEntity(
-//        id = this.id.toInt(),
-//        userId = this.user_id.toInt(),
-//        kodeDesa = this.kode_desa,
-//        kodeKec = this.kode_kecamatan,
-//        date = this.date,
-//        absensiMorning = this.absensi_pagi,
-//        absensiAfternoon = this.absensi_sore,
-//        late = this.late?.toInt(),
-//        early = this.early?.toInt(),
-//        syncStatus = this.sync_status.toInt(),
-//    )
-//}

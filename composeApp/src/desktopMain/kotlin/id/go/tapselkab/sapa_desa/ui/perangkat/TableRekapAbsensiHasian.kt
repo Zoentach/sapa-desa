@@ -1,7 +1,6 @@
 package id.go.tapselkab.sapa_desa.ui.perangkat
 
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,13 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import attanceTextStatus
-import id.go.tapselkab.sapa_desa.di.viewModelModule
 import id.go.tapselkab.sapa_desa.ui.component.dialog.MonthPicker
 import id.go.tapselkab.sapa_desa.ui.component.dialog.UploadLampiranDialog
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
-import id.go.tapselkab.sapa_desa.utils.time.DateManager
-import org.koin.compose.koinInject
 import java.time.LocalDate
 
 @Composable
@@ -60,7 +55,12 @@ fun RekapAbsensiHarian(
                 showUploadLampiran = false
             },
             onUpload = { date, jenis, filePath, file ->
-
+                viewModel.ajukanAbsensiIzin(
+                    perangkatId = perangkatId.toLong(),
+                    tanggal = date,
+                    keterangan = jenis,
+                    lampiran = file
+                )
             }
         )
     }
@@ -269,9 +269,9 @@ fun BodyTableAbsensi(
                 }
                 .border(2.dp, Color.Black)
                 .padding(6.dp),
-            text = if (absensi.syncStatus == 0) "Kirim" else "Terkirim",
+            text = if (absensi.syncStatus == 0) "Kirim" else absensi.keterangan.orEmpty(),
             textAlign = TextAlign.Center,
-            color = if (absensi.syncStatus == 0) Color.Blue else Color.Gray,
+            color = if (absensi.syncStatus == 0) Color.Blue else Color.Green,
             fontWeight = FontWeight.ExtraBold
         )
     }

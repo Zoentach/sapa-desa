@@ -235,6 +235,8 @@ class AbsensiViewModel(
                         keterangan = keterangan,
                         syncStatus = 1
                     )
+
+                    getAbsensiByPerangkatAndMonth(perangkatId.toInt())
                 }
 
                 _absensiResult.value = AbsensiResult(
