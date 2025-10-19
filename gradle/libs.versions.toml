@@ -70,8 +70,6 @@ pattern-loader-opencv = { group = "nu.pattern", name = "opencv", version.ref = "
 #open-pnp = {group = "org.openpnp", name = "opencv", version.ref = "openpnp"}
 skiko-awt-runtime = {group = "org.jetbrains.skiko", name = "skiko-awt-runtime", version.ref = "skiko-awt"}
 
-
-
 [plugins]
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

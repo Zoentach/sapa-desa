@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 import java.time.LocalDate
+import id.go.tapselkab.sapa_desa.utils.camera.CameraManager
+import id.go.tapselkab.sapa_desa.utils.camera.saveReferenceFace
 
 class AbsensiViewModel(
     private val repository: AbsensiRepository,
@@ -40,9 +42,11 @@ class AbsensiViewModel(
     private val _thisMonth: MutableStateFlow<String> = MutableStateFlow("")
     val thisMonth = _thisMonth.asStateFlow()
 
-
     private val _thisDay: MutableStateFlow<String> = MutableStateFlow("null")
     val thisDay = _thisDay.asStateFlow()
+
+    private val _isCameraReady:MutableStateFlow<Boolean> =  MutableStateFlow (false)
+    val isCameraReady = _isCameraReady.asStateFlow()
 
     fun initScreen() {
         val hour = TimeManager.isMorningOrAfternoon()
@@ -56,6 +60,7 @@ class AbsensiViewModel(
         _thisDay.value = DateManager.getMillisAt0815().thisDay()
     }
 
+
     fun setAbsensiResult() {
         _absensiResult.value = AbsensiResult(
             status = AbsensiStatus.INITIAL,
@@ -63,9 +68,99 @@ class AbsensiViewModel(
         )
     }
 
-    fun prosesAbsensi(perangkatId: Int, timeStamp: Long) {
+    fun detectCamera(){
+        scope.launch{
+           try {
+               _absensiResult.value = AbsensiResult(
+                   status = AbsensiStatus.LOADING,
+                   message = "Sedang mendeteksi kamera"
+               )
+               val foundIndex = CameraManager.findAvailableCameraIndex()
+               if (foundIndex != null) {
+                   val started = CameraManager.startCapture(foundIndex)
+
+                   _isCameraReady.value = started
+
+                   _absensiResult.value = AbsensiResult(
+                       status = AbsensiStatus.INITIAL,
+                       message = ""
+                   )
+
+               } else {
+                   _absensiResult.value = AbsensiResult(
+            status = AbsensiStatus.FAILED,
+            message = "Kamera tidak ditemukan"
+                   )
+               }
+           }catch(e: Exception) {
+               _absensiResult.value = AbsensiResult(
+                   status = AbsensiStatus.FAILED,
+                   message = "Kamera tidak ditemukan"
+                          )
+           }
+        }
+    }
+
+    fun saveImageReference(folderName:String, fileName:String){
 
         scope.launch {
+
+            try {
+                val saved = saveReferenceFace(folderName = folderName, fileName = fileName)
+
+                if (saved) {
+                    CameraManager.releaseCamera()
+
+                    _absensiResult.value = AbsensiResult(
+                        status = AbsensiStatus.SUCCESS,
+                        message = "Berhasil menyimpan foto Referensi"
+                    )
+                }
+            }catch(e:Exception){
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.FAILED,
+                    message = e.message.orEmpty()
+                )
+            }
+
+        }
+
+    }
+
+    fun saveImageAbsensi(id:Int){
+
+        scope.launch {
+
+            try {
+                val timeStamp = TimeManager.getCurrentTimeMillis()
+
+                val folderName ="$id"
+                val fileName ="$timeStamp"
+
+                val saved = saveReferenceFace(folderName = folderName, fileName = fileName)
+
+                if (saved) {
+                    CameraManager.releaseCamera()
+
+                    prosesAbsensi(
+                        perangkatId = id,
+                        timeStamp = timeStamp ?: 0
+                    )
+                }
+            }catch(e:Exception){
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.FAILED,
+                    message = e.message.orEmpty()
+                )
+            }
+
+        }
+
+    }
+
+    private suspend fun prosesAbsensi(perangkatId: Int, timeStamp: Long) {
+
+      //  scope.launch {
 
             _absensiResult.value = AbsensiResult(
                 status = AbsensiStatus.LOADING,
@@ -95,7 +190,7 @@ class AbsensiViewModel(
                     "Error: ${e.message}"
                 )
             }
-        }
+     //   }
     }
 
     private suspend fun saveAbsensi(userId: Int, timeStamp: Long) {

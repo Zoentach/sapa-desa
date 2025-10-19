@@ -44,7 +44,7 @@ fun CameraDialog(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Preview Kamera", style = MaterialTheme.typography.headlineMedium)
+                Text("Tampilan Kamera", style = MaterialTheme.typography.headlineMedium)
 
                 CameraPreviewLoop()
 

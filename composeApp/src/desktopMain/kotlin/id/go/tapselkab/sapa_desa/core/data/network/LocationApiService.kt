@@ -1,25 +1,11 @@
 package id.go.tapselkab.sapa_desa.core.data.network
 
 import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.ContentType.Application.Json
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-
-import id.go.tapselkab.sapa_desa.core.data.local.model.VerifikasiAbsensiModel
-import id.go.tapselkab.sapa_desa.core.data.local.model.VerifikasiAbsensiResponse
-import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.io.IOException
-import id.go.tapselkab.sapa_desa.core.data.model.*
-import id.go.tapselkab.sapa_desa.core.data.network.model.AbsensiRequest
-import java.io.File
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class IpApiResponse(

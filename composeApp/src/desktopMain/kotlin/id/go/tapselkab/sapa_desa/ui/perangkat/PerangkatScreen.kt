@@ -6,6 +6,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.go.tapselkab.sapa_desa.ui.component.dialog.AlertBoxDialog
+import id.go.tapselkab.sapa_desa.ui.component.dialog.LoadingScreen
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.geofish
 import id.go.tapselkab.sapa_desa.ui.component.dialog.CameraDialog
@@ -39,22 +42,66 @@ fun PerangkatScreen(
 
     val absensiResult by absensiViewModel.absensiResult.collectAsState()
 
+    val isCameraReady by absensiViewModel.isCameraReady.collectAsState()
+
     // val cameraAvailableIndex by remember { mutableStateOf(CameraManager.findAvailableCameraIndex()) }
 
     var showCameraFaceRef by remember { mutableStateOf(false) }
 
     var showCamereAbsensi by remember { mutableStateOf(false) }
 
-    var absensiMessage by remember { mutableStateOf("Belum Absen") }
+    var showAlertDialog by remember { mutableStateOf(false) }
+    var showLoadingDialog by remember { mutableStateOf(false) }
 
-    if (absensiResult.status == AbsensiStatus.LOADING) {
-        LoadingDialog(absensiResult.message)
+
+    LaunchedEffect(Unit) {
+        absensiViewModel.detectCamera()
+//        withContext(Dispatchers.IO) {
+//            val foundIndex = CameraManager.findAvailableCameraIndex()
+//            if (foundIndex != null) {
+//                val started = CameraManager.startCapture(foundIndex)
+//                withContext(Dispatchers.Main) {
+//                    cameraIndex = foundIndex
+//                    cameraStartCapture = started
+//                }
+//            } else {
+//                withContext(Dispatchers.Main) {
+//                    println("Kamera tidak tersedia.")
+//                }
+//            }
+//        }
     }
 
-    if (absensiResult.status == AbsensiStatus.FAILED) {
+   LaunchedEffect(absensiResult) {
+       if (absensiResult.status == AbsensiStatus.SUCCESS ||
+           absensiResult.status == AbsensiStatus.FAILED
+       ) {
+           showLoadingDialog = false
+           showAlertDialog = true
+       } else if ( absensiResult.status == AbsensiStatus.LOADING ){
+           showAlertDialog = false
+           showLoadingDialog = true
+       } else {
+           showAlertDialog = false
+           showLoadingDialog = false
+       }
+   }
+
+    if (showAlertDialog) {
+        val imageVector =
+            if (absensiResult.status == AbsensiStatus.SUCCESS) Icons.Default.Done
+            else Icons.Default.Warning
+
+        val tint =
+            if (absensiResult.status == AbsensiStatus.SUCCESS) Color.Green
+            else Color.Red
+
         AlertBoxDialog(
             message = absensiResult.message,
+            imageVector = imageVector,
+            tint = tint,
             onDismiss = {
+                showAlertDialog = false
                 absensiViewModel.setAbsensiResult()
             }
         )
@@ -68,12 +115,8 @@ fun PerangkatScreen(
                 showCameraFaceRef = false
             },
             onCapture = {
-                val saved = saveReferenceFace(folderName = "${perangkat?.id}", fileName = "${perangkat?.id}")
-                if (saved) {
-                    CameraManager.releaseCamera()
-                    showCameraFaceRef = false
-                }
-
+                absensiViewModel.saveImageReference(folderName =  "${perangkat?.id}", fileName =  "${perangkat?.id}")
+                showCameraFaceRef = false
             },
             actionText = "Ambil Gambar"
         )
@@ -86,16 +129,8 @@ fun PerangkatScreen(
                 showCamereAbsensi = false
             },
             onCapture = {
-                val timeStamp = TimeManager.getCurrentTimeMillis()
-                val saved = saveReferenceFace(folderName = "${perangkat?.id}", fileName = "$timeStamp")
-                if (saved) {
-                    CameraManager.releaseCamera()
-                    showCamereAbsensi = false
-                    absensiViewModel.prosesAbsensi(
-                        perangkatId = perangkat?.id ?: 0,
-                        timeStamp = timeStamp ?: 0
-                    )
-                }
+               absensiViewModel.saveImageAbsensi(id = perangkat?.id ?: 0)
+                showCamereAbsensi = false
             },
             actionText = "Mulai Absensi"
         )
@@ -141,25 +176,27 @@ fun PerangkatScreen(
             absensiButton(
                 modifier = Modifier
                     .padding(top = 10.dp),
+                enabled = showCameraFaceRef == false && showCamereAbsensi == false && isCameraReady == true,
                 viewModel = absensiViewModel
             ) {
-                val index = CameraManager.findAvailableCameraIndex()
-                if (index != null && CameraManager.startCapture(index)) {
+                //val index = CameraManager.findAvailableCameraIndex()
+                if (isCameraReady) {
                     showCamereAbsensi = true
                 }
             }
 
-            Text(
-                text = absensiMessage,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily(Font(Res.font.geofish)),
-            )
+//            Text(
+//                text = absensiMessage,
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.Bold,
+//                fontFamily = FontFamily(Font(Res.font.geofish)),
+//            )
 
 
             RekapAbsensiHarian(
                 perangkatId = perangkat?.id ?: 0,
-                viewModel = absensiViewModel
+                viewModel = absensiViewModel,
+                modifier = Modifier.padding(horizontal =32.dp)
             )
         }
 
@@ -180,7 +217,18 @@ fun PerangkatScreen(
                 text = "Kembali"
             )
 
+        }
 
+        if (showLoadingDialog) {
+            LoadingScreen(
+                message = absensiResult.message,
+                onCancel = {
+                    absensiViewModel.setAbsensiResult()
+                    if (isCameraReady == false ) {
+                        onNavigateBack()
+                    }
+                }
+            )
         }
     }
 }
@@ -188,6 +236,7 @@ fun PerangkatScreen(
 @Composable
 fun absensiButton(
     modifier: Modifier = Modifier,
+    enabled:Boolean = true,
     viewModel: AbsensiViewModel,
     onClick: () -> Unit,
 ) {
@@ -230,7 +279,8 @@ fun absensiButton(
                 .padding(vertical = 10.dp),
             onClick = {
                 onClick()
-            }
+            },
+            enabled = enabled
         ) {
             Text("Mulai Absen")
         }

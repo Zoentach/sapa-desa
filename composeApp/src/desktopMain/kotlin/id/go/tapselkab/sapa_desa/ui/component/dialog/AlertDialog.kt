@@ -87,17 +87,19 @@ fun AlertDialogCustom(
 @Composable
 fun AlertBoxDialog(
     message: String,
-    // icon: androidx.compose.ui.graphics.vector.ImageVector,
+    imageVector: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.Warning,
+    tint: Color = Color.Red,
     onDismiss: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = {
-
+            onDismiss()
         }
     ) {
         AlertScreen(
             message = message,
-            //       icon = icon,
+            imageVector = imageVector,
+            tint = tint,
             onDismiss = onDismiss
         )
     }
@@ -106,7 +108,8 @@ fun AlertBoxDialog(
 @Composable
 fun AlertScreen(
     message: String,
-    // icon: androidx.compose.ui.graphics.vector.ImageVector,
+    imageVector: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color,
     onDismiss: () -> Unit,
 ) {
     Box(
@@ -127,9 +130,9 @@ fun AlertScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    imageVector = Icons.Default.Warning,
+                    imageVector = imageVector,
                     contentDescription = message,
-                    tint = Color.Red
+                    tint = tint
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(

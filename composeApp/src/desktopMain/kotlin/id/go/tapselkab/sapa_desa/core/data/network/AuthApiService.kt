@@ -12,13 +12,14 @@ import io.ktor.http.*
 import kotlinx.io.IOException
 import id.go.tapselkab.sapa_desa.core.data.model.*
 import id.go.tapselkab.sapa_desa.core.data.network.model.AbsensiRequest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 
 interface AuthApiService {
-    // suspend fun loginWithEmail(email: String, password: String, deviceName: String = "SAPA DESA"): String
     suspend fun loginWithEmail(email: String, password: String): String
 
-    //  suspend fun loginWithToken(token: String): Boolean
     suspend fun getUser(token: String): UserResponse
 
     suspend fun getPerangkat(token: String): List<PerangkatModel>?
@@ -45,11 +46,6 @@ interface AuthApiService {
         lampiran: File
     ): Boolean
 
-    suspend fun updateMacAddress(
-        token: String,
-        macAddress: String
-    ): Boolean
-
 }
 
 class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) : AuthApiService {
@@ -61,26 +57,31 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
                 setBody(LoginRequest(email, password))
             }
 
-            // Cek response code jika diperlukan
             if (!response.status.isSuccess()) {
-                throw Exception("Login gagal: ${response.status}")
+                // Baca dan ambil pesan error dari response body
+                val errorResponse = response.bodyAsText()
+                val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                // Ambil pesan error
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                // Menampilkan pesan error
+                throw Exception("$errorMessage")
             }
 
             val tokenResponse: LoginResponse = response.body()
             tokenResponse.token
 
         } catch (e: io.ktor.client.network.sockets.SocketTimeoutException) {
-            throw Exception("Koneksi timeout, periksa jaringan Anda")
+            throw e
         } catch (e: IOException) {
-            throw Exception("Tidak ada koneksi internet atau server tidak dapat dijangkau")
+            throw e
         } catch (e: ClientRequestException) {
-            // Kesalahan dari sisi client (4xx)
-            throw Exception("Email atau password salah (4xx): ${e.response.status}")
+            throw e
         } catch (e: ServerResponseException) {
-            // Kesalahan dari sisi server (5xx)
-            throw Exception("Server error (5xx): ${e.response.status}")
+            throw e
         } catch (e: Exception) {
-            throw Exception("Terjadi kesalahan saat login: ${e.message}")
+            throw e
         }
     }
 
@@ -94,7 +95,15 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                throw Exception("Gagal mengambil data user: ${response.status}")
+                // Baca dan ambil pesan error dari response body
+                val errorResponse = response.bodyAsText()
+                val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                // Ambil pesan error
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                // Menampilkan pesan error
+                throw Exception("$errorMessage")
             }
 
             response.body()
@@ -120,7 +129,15 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                throw Exception("Gagal mengambil data perangkat: ${response.status}")
+                // Baca dan ambil pesan error dari response body
+                val errorResponse = response.bodyAsText()
+                val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                // Ambil pesan error
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                // Menampilkan pesan error
+                throw Exception("$errorMessage")
             }
 
             val result = response.body<PerangkatResponse<List<PerangkatModel>>>()
@@ -128,11 +145,11 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             result.data
 
         } catch (e: ClientRequestException) {
-            throw Exception("Token tidak valid atau expired")
+            throw e
         } catch (e: ServerResponseException) {
-            throw Exception("Kesalahan server saat memuat user")
+            throw e
         } catch (e: Exception) {
-            throw Exception("Terjadi kesalahan saat memuat data perangkat: ${e.message}")
+            throw e
         }
     }
 
@@ -145,20 +162,22 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
                 }
             }
 
+            val result = response.body<VerifikasiAbsensiResponse<VerifikasiAbsensiModel>>()
+
             if (!response.status.isSuccess()) {
-                throw Exception("Gagal mengambil data verifikasi absensi: ${response.status}")
+                throw Exception("${response.status}")
             }
 
-            val result = response.body<VerifikasiAbsensiResponse<VerifikasiAbsensiModel>>()
+
 
             result.data
 
         } catch (e: ClientRequestException) {
-            throw Exception("Token tidak valid atau expired")
+            throw e
         } catch (e: ServerResponseException) {
-            throw Exception("Kesalahan server saat memuat verifikasi absensi")
+            throw e
         } catch (e: Exception) {
-            throw Exception("Terjadi kesalahan saat memuat data verifikasi absensi: ${e.message}")
+            throw e
         }
     }
 
@@ -187,19 +206,25 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                throw Exception("Gagal mengirim verifikasi absensi: ${response.status}")
+                // Baca dan ambil pesan error dari response body
+                val errorResponse = response.bodyAsText()
+                val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                // Ambil pesan error
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                // Menampilkan pesan error
+                throw Exception("$errorMessage")
             }
 
-            println("Verifikasi absensi berhasil dikirim: ${response.status}")
             true
 
         } catch (e: Exception) {
-            println("Gagal mengirim verifikasi absensi: ${e.message}")
-            throw Exception("Kesalahan saat mengirim data: ${e.message}")
+            throw e
         }
     }
 
-    //keterangan dan lampiran bernilai default null
+
     override suspend fun insertAbsensiWithImages(
         token: String,
         latitude: Double,
@@ -221,8 +246,8 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
 
                     append("perangkat_id", absensi.perangkat_id.toString())
                     append("tanggal", absensi.tanggal)
-                    absensi.absensi_pagi?.let { append("absensi_pagi", it.toString()) }
-                    absensi.absensi_sore?.let { append("absensi_sore", it.toString()) }
+                    absensi.absensi_pagi?.let { append("absensi_pagi", it) }
+                    absensi.absensi_sore?.let { append("absensi_sore", it) }
                     absensi.keterlambatan?.let { append("keterlambatan", it.toString()) }
                     absensi.pulang_cepat?.let { append("pulang_cepat", it.toString()) }
 
@@ -248,7 +273,15 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                throw Exception("Error: ${response.status} -  ${response.status.value} ")
+                // Baca dan ambil pesan error dari response body
+                val errorResponse = response.bodyAsText()
+                val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                // Ambil pesan error
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                // Menampilkan pesan error
+                throw Exception("$errorMessage")
             }
 
             true
@@ -285,38 +318,20 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
             }
 
             if (!response.status.isSuccess()) {
-                val body = response.bodyAsText()
-                throw Exception("Gagal upload lampiran: ${response.status} - $body")
+                // Baca dan ambil pesan error dari response body
+                val errorResponse = response.bodyAsText()
+                val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                // Ambil pesan error
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                // Menampilkan pesan error
+                throw Exception("$errorMessage")
             }
 
             true
         } catch (e: Exception) {
-            println("Error insertAbsensiWithLampiran: ${e.message}")
             throw e
-        }
-    }
-
-    override suspend fun updateMacAddress(token: String, macAddress: String): Boolean {
-        return try {
-            val response: HttpResponse = client.post(NetworkModule.apiUrl("/api/user/update-mac")) {
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer $token")
-                    append(HttpHeaders.ContentType, "application/json")
-                }
-                setBody("""{ "mac_address": "$macAddress" }""")
-            }
-
-            if (!response.status.isSuccess()) {
-                throw Exception("Gagal update MAC address: ${response.status}")
-            }
-
-            true
-        } catch (e: ClientRequestException) {
-            throw Exception("Token tidak valid atau permintaan salah: ${e.response.status}")
-        } catch (e: ServerResponseException) {
-            throw Exception("Kesalahan server saat update MAC address")
-        } catch (e: Exception) {
-            throw Exception("Terjadi kesalahan saat update MAC address: ${e.message}")
         }
     }
 

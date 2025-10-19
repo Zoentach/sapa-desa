@@ -27,6 +27,7 @@ import java.time.LocalDate
 fun RekapAbsensiHarian(
     perangkatId: Int,
     viewModel: AbsensiViewModel,
+    modifier: Modifier = Modifier,
 ) {
 
 
@@ -61,6 +62,7 @@ fun RekapAbsensiHarian(
                     keterangan = jenis,
                     lampiran = file
                 )
+                showUploadLampiran = false
             }
         )
     }
@@ -138,25 +140,33 @@ fun RekapAbsensiHarian(
                 },
                 content = {
                     Text("Ekspor")
-                }
+                },
+                enabled = false
             )
         }
     }
     Spacer(Modifier.height(6.dp))
-    HeaderTableAbsensi()
+    HeaderTableAbsensi(
+        modifier = modifier
+    )
     absensis.forEach {
         BodyTableAbsensi(
             absensi = it,
             onSendabsensi = { absensi ->
                 viewModel.sendAbsensi(absensi)
-            }
+            },
+            modifier = modifier
         )
     }
 }
 
 @Composable
-fun HeaderTableAbsensi() {
-    Row {
+fun HeaderTableAbsensi(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+    ) {
         Text(
             modifier = Modifier
                 .weight(1f)
@@ -214,10 +224,11 @@ fun HeaderTableAbsensi() {
 @Composable
 fun BodyTableAbsensi(
     absensi: AbsensiEntity,
-    onSendabsensi: (absensi: AbsensiEntity) -> Unit
+    onSendabsensi: (absensi: AbsensiEntity) -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
-    Row {
+    Row(modifier = modifier) {
 
         Text(
             modifier = Modifier
@@ -261,11 +272,6 @@ fun BodyTableAbsensi(
             modifier = Modifier.weight(1f)
                 .clickable {
                     onSendabsensi(absensi)
-//                    when (absensi.syncStatus) {
-//                        0 -> {
-//                            onSendabsensi(absensi)
-//                        }
-//                    }
                 }
                 .border(2.dp, Color.Black)
                 .padding(6.dp),

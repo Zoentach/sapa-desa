@@ -39,8 +39,18 @@ class VerifikasiViewModel(
 
             }
         } catch (e: Exception) {
-            println("Error: ${e.message}")
+            _absensiResult.value = AbsensiResult(
+                AbsensiStatus.FAILED,
+                e.message.orEmpty()
+            )
         }
+    }
+
+    fun setUploadStatus(){
+        _absensiResult.value = AbsensiResult(
+            AbsensiStatus.INITIAL,
+            ""
+        )
     }
 
     fun sendVerifikasiAbsensi(token: String, verifikasi: VerifikasiAbsensiEntity) {
@@ -72,7 +82,7 @@ class VerifikasiViewModel(
             println("Error: ${e.message}")
             _absensiResult.value = AbsensiResult(
                 AbsensiStatus.FAILED,
-                "Kesalahan saat proses upload: ${e.message}"
+                e.message.orEmpty()
             )
         }
     }

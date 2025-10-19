@@ -12,6 +12,13 @@ import org.bytedeco.opencv.opencv_face.LBPHFaceRecognizer
 import org.bytedeco.opencv.opencv_objdetect.CascadeClassifier
 import java.io.File
 import kotlin.io.path.createTempFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.bytedeco.opencv.global.opencv_core.CV_32SC1
+import org.bytedeco.opencv.global.opencv_imgcodecs.IMREAD_GRAYSCALE
+import org.bytedeco.opencv.global.opencv_imgcodecs.imread
+import org.bytedeco.opencv.opencv_core.Mat
+import org.bytedeco.opencv.opencv_core.MatVector
 
 object FaceRecognizerManager {
 
@@ -94,10 +101,10 @@ object FaceRecognizerManager {
         }
     }
 
-    suspend fun compareFaces(
+   /* suspend fun compareFaces(
         referencePath: String,
         capturedPath: String,
-        threshold: Double = 60.0,
+        threshold: Double = 100.0,
         maxConfidence: Double = 100.0,
     ): Pair<Boolean, Double> {
         return try {
@@ -137,5 +144,61 @@ object FaceRecognizerManager {
             println("Gagal membandingkan wajah: ${e.message}")
             false to Double.MAX_VALUE
         }
+    }*/
+
+    suspend fun compareFaces(
+        referencePath: String,
+        capturedPath: String,
+        threshold: Double = 70.0,        // ⬅️ default diturunkan untuk lebih ketat
+        maxConfidence: Double = 100.0    // ⬅️ digunakan untuk konversi persentase
+    ): Pair<Boolean, Double> = withContext(Dispatchers.IO) {
+        try {
+            val refImage = imread(referencePath, IMREAD_GRAYSCALE)
+            val capturedImage = imread(capturedPath, IMREAD_GRAYSCALE)
+
+            if (refImage.empty() || capturedImage.empty()) {
+                println("Salah satu gambar kosong.")
+                return@withContext false to Double.MAX_VALUE
+            }
+
+            // Optional: Resize images to same size (misal 200x200)
+            val resizedRef = Mat()
+            val resizedCaptured = Mat()
+            org.bytedeco.opencv.global.opencv_imgproc.resize(refImage, resizedRef, org.bytedeco.opencv.opencv_core.Size(200, 200))
+            org.bytedeco.opencv.global.opencv_imgproc.resize(capturedImage, resizedCaptured, org.bytedeco.opencv.opencv_core.Size(200, 200))
+
+            val labels = Mat(1, 1, CV_32SC1)
+            labels.ptr(0).putInt(0)
+
+            val images = MatVector(1)
+            images.put(0, resizedRef)
+
+            val recognizer = LBPHFaceRecognizer.create()
+            recognizer.setRadius(2)               // 🔧 Parameter LBPH: radius
+            recognizer.setNeighbors(8)           // 🔧 lebih tinggi = lebih sensitif
+            recognizer.setGridX(8)
+            recognizer.setGridY(8)
+            recognizer.setThreshold(threshold)    // Setting threshold internal
+
+            recognizer.train(images, labels)
+
+            val predictedLabel = intArrayOf(-1)
+            val confidence = DoubleArray(1)
+
+            recognizer.predict(resizedCaptured, predictedLabel, confidence)
+
+            val similarityPercent = ((1.0 - (confidence[0] / maxConfidence)) * 100.0).coerceIn(0.0, 100.0)
+            val isMatch = confidence[0] <= threshold
+            isMatch to similarityPercent
+
+        } catch (e: Exception) {
+            println("Gagal membandingkan wajah: ${e.message}")
+            false to Double.MAX_VALUE
+        }
     }
 }
+
+
+
+
+

@@ -69,27 +69,22 @@ compose.desktop {
         mainClass = "id.go.tapselkab.sapa_desa.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Msi)
-            packageName = "id.go.tapselkab.sapa_desa"
-            packageVersion = "1.0.0"
-
+            targetFormats(TargetFormat.Msi, TargetFormat.Exe)
             modules("java.sql")
+            args += listOf("-customArgument")
+            jvmArgs += listOf("-Xmx2G")
+
+
+            windows {
+                packageName = "Sapa Desa"
+                packageVersion = "1.0.0"
+                includeAllModules = true
+                upgradeUuid = "a5b82f1d-ba30-4e7b-9858-3040a1288662"
+                shortcut = true
+            }
+
 
         }
-
-        // Lokasi temp SQLite JDBC
-        //val sqliteTempDir = file("C:/sqlite-temp")
-
-//        gradle.projectsEvaluated {
-//            if (!sqliteTempDir.exists()) {
-//                sqliteTempDir.mkdirs()
-//                println("Folder temp untuk SQLite JDBC dibuat: $sqliteTempDir")
-//            }
-//        }
-//
-//        tasks.withType<JavaExec> {
-//            jvmArgs("-Djava.io.tmpdir=${sqliteTempDir.absolutePath}")
-//        }
     }
 }
 

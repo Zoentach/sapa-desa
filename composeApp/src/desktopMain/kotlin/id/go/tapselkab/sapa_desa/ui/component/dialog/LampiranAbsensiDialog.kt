@@ -231,7 +231,8 @@ fun UploadLampiranScreen(
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+
                     ) {
                         Text("Batal")
                     }
@@ -242,6 +243,10 @@ fun UploadLampiranScreen(
                                 onUpload(selectedDate, selectedJenis, filePath, selectedFile!!)
                             }
                         },
+                        enabled = selectedDate.isNotEmpty() &&
+                                  selectedJenis.isNotEmpty() &&
+                                  filePath.isNotEmpty() &&
+                                  selectedFile != null,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Upload")

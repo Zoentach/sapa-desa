@@ -64,8 +64,7 @@ class VerifikasiAbsensiRepository(
             null
 
         } catch (e: Exception) {
-            println("Gagal mengambil VerifikasiAbsensi: ${e.message}")
-            null
+            throw e
         }
     }
 
@@ -96,8 +95,7 @@ class VerifikasiAbsensiRepository(
                 false
             }
         } catch (e: Exception) {
-            println("Gagal mengirim verifikasi absensi: ${e.message}")
-            false
+            throw e
         }
     }
 

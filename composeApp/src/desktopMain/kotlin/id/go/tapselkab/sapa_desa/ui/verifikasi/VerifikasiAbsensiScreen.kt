@@ -3,6 +3,9 @@ package id.go.tapselkab.sapa_desa.ui.verifikasi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -11,6 +14,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import id.go.tapselkab.sapa_desa.ui.component.dialog.AlertBoxDialog
+import id.go.tapselkab.sapa_desa.ui.component.dialog.LoadingDialog
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiStatus
 import id.go.tapselkab.sapa_desa.ui.entity.VerifikasiAbsensiEntity
 import id.go.tapselkab.sapa_desa.ui.graph.VerifikasiAbsensi
@@ -36,6 +41,9 @@ fun VerifikasiAbsensiScreen(
     val location by viewModel.location.collectAsState()
     val uploadStatus by viewModel.absensiResult.collectAsState()
 
+    var showAlertDialog by remember { mutableStateOf(false) }
+    var showLoadingDialog by remember { mutableStateOf(false) }
+
 
     // Ambil MAC address dan lokasi otomatis saat screen dibuka
     LaunchedEffect(Unit) {
@@ -43,9 +51,38 @@ fun VerifikasiAbsensiScreen(
     }
 
     LaunchedEffect(uploadStatus) {
-        if (uploadStatus.status == AbsensiStatus.SUCCESS) {
-            onNavigateBack()
+        if (uploadStatus.status == AbsensiStatus.SUCCESS ||
+            uploadStatus.status == AbsensiStatus.FAILED
+        ) {
+            showLoadingDialog = false
+            showAlertDialog = true
+        } else if (uploadStatus.status == AbsensiStatus.LOADING){
+            showAlertDialog = false
+            showLoadingDialog = true
+        }else {
+            showAlertDialog = false
+            showLoadingDialog = false
         }
+    }
+
+    if (showAlertDialog) {
+        val imageVector =
+            if (uploadStatus.status == AbsensiStatus.SUCCESS) Icons.Default.Done
+            else Icons.Default.Warning
+
+        val tint =
+            if (uploadStatus.status == AbsensiStatus.SUCCESS) Color.Green
+            else Color.Red
+
+        AlertBoxDialog(
+            message = uploadStatus.message,
+            imageVector = imageVector,
+            tint = tint,
+            onDismiss = {
+                showAlertDialog = false
+                onNavigateBack()
+            }
+        )
     }
 
     Box(
@@ -117,8 +154,6 @@ fun VerifikasiAbsensiScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-
-
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
@@ -166,8 +201,13 @@ fun VerifikasiAbsensiScreen(
                 }
             }
         }
-        if (uploadStatus.status == AbsensiStatus.LOADING) {
-            CircularProgressIndicator()
+        if (showLoadingDialog) {
+           LoadingDialog(
+              message = uploadStatus.message,
+               onCancel = {
+                   viewModel.setUploadStatus()
+               }
+           )
         }
     }
 }

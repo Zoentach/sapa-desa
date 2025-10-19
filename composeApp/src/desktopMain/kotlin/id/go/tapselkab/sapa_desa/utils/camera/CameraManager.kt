@@ -15,7 +15,7 @@ object CameraManager {
     /**
      * Mencari index kamera yang tersedia dari 0 sampai [maxIndex].
      */
-    fun findAvailableCameraIndex(maxIndex: Int = 5): Int? {
+    fun findAvailableCameraIndex(maxIndex: Int = 2): Int? {
         for (index in 0..maxIndex) {
             val cam = VideoCapture(index)
             if (cam.isOpened) {
@@ -30,7 +30,7 @@ object CameraManager {
     /**
      * Mengecek apakah ada kamera yang tersedia.
      */
-    fun hasAnyCameraAvailable(maxIndex: Int = 5): Boolean {
+    fun hasAnyCameraAvailable(maxIndex: Int = 2): Boolean {
         return findAvailableCameraIndex(maxIndex) != null
     }
 
@@ -67,7 +67,7 @@ object CameraManager {
     /**
      * Mengambil satu frame dari kamera dan menyimpannya ke file.
      */
-    fun captureAndSave(outputPath: String): Boolean {
+    suspend fun captureAndSave(outputPath: String): Boolean {
         val cam = camera ?: return false
         val frame = Mat()
 
