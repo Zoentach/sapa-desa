@@ -60,6 +60,8 @@ androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "l
 
 #for dekstop
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
+ktor-client-java = {group = "io.ktor", name = "ktor-client-java", version.ref = "ktor" }
+
 
 #https://insert-koin.io/docs/reference/koin-mp/kmp
 

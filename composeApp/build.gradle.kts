@@ -51,7 +51,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
 
-            implementation(libs.ktor.client.cio)
+            // implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.java)
             implementation(libs.sqldelight.driver)
 
             // OpenCV & JavaCV lengkap
@@ -77,10 +78,11 @@ compose.desktop {
 
             windows {
                 packageName = "Sapa Desa"
-                packageVersion = "1.0.0"
+                packageVersion = "1.0.1"
                 includeAllModules = true
                 upgradeUuid = "a5b82f1d-ba30-4e7b-9858-3040a1288662"
                 shortcut = true
+                iconFile.set(project.file("icons/app_icon.ico"))
             }
 
 

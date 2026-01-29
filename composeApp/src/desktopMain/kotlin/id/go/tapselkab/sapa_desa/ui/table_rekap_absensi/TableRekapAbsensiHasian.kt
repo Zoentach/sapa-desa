@@ -1,9 +1,11 @@
-package id.go.tapselkab.sapa_desa.ui.perangkat
+package id.go.tapselkab.sapa_desa.ui.table_rekap_absensi
 
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedButton
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import id.go.tapselkab.sapa_desa.ui.component.dialog.MonthPicker
 import id.go.tapselkab.sapa_desa.ui.component.dialog.UploadLampiranDialog
 import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
+import id.go.tapselkab.sapa_desa.ui.perangkat.AbsensiViewModel
 import java.time.LocalDate
 
 @Composable
@@ -91,6 +94,7 @@ fun RekapAbsensiHarian(
         modifier = Modifier
             .fillMaxWidth()
             .padding(32.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Row(
             modifier = Modifier
@@ -117,20 +121,6 @@ fun RekapAbsensiHarian(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = null
                         )
-                    }
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                OutlinedButton(
-                    onClick = {
-                        showUploadLampiran = !showUploadLampiran
-                    },
-                    content = {
-                        Text("Ajukan Izin")
                     }
                 )
             }

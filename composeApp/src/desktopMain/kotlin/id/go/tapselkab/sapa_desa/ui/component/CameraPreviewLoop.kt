@@ -48,7 +48,7 @@ fun CameraPreviewLoop() {
         background = Color.Black,
         factory = { panel },
         modifier = Modifier
-            .width(1067.dp)
+            .width(600.dp)
             .height(600.dp)
     )
 }

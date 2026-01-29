@@ -181,45 +181,81 @@ class AuthApiServiceImpl(private val client: HttpClient = NetworkModule.client) 
         }
     }
 
+    /*  override suspend fun sendVerifikasiAbsensi(
+          token: String,
+          data: VerifikasiAbsensiModel
+      ): Boolean {
+          return try {
+
+              val response = client.submitForm(
+                  url = NetworkModule.apiUrl("/api/verifikasi-absensi"),
+                  formParameters = parameters {
+                      // Hapus user_id, karena Laravel mengambil ID dari Token (Sanctum)
+                      // append("user_id", data.user_id.toString())
+                      append("user_id", data.user_id.toString())
+                      append("kode_kecamatan", data.kode_kecamatan)
+                      append("kode_desa", data.kode_desa)
+                      append("mac_address", data.mac_address ?: "") // Handle null
+                      append("latitude", data.latitude?.toString() ?: "")
+                      append("longitude", data.longitude?.toString() ?: "")
+                  }
+              ) {
+                  headers {
+                      append(HttpHeaders.Authorization, "Bearer $token")
+                      append(HttpHeaders.Accept, "application/json")
+                  }
+              }
+
+              if (!response.status.isSuccess()) {
+                  // Baca dan ambil pesan error dari response body
+                  val errorResponse = response.bodyAsText()
+                  val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
+
+                  // Ambil pesan error
+                  val errorMessage = jsonError["message"]?.jsonPrimitive?.content
+
+                  // Menampilkan pesan error
+                  throw Exception("$errorMessage")
+              }
+
+              true
+
+          } catch (e: Exception) {
+              throw e
+          }
+      }*/
+
     override suspend fun sendVerifikasiAbsensi(
         token: String,
         data: VerifikasiAbsensiModel
     ): Boolean {
         return try {
-            val response = client.submitFormWithBinaryData(
-                url = NetworkModule.apiUrl("/api/verifikasi-absensi"),
-                formData = formData {
-                    append("user_id", data.user_id.toString())
-                    append("kode_kecamatan", data.kode_kecamatan)
-                    append("kode_desa", data.kode_desa)
-                    append("mac_address", data.mac_address.toString())
 
-                    // latitude & longitude bisa null, jadi pakai let
-                    append("latitude", data.latitude.toString())
-                    append("longitude", data.longitude.toString())
-                }
-            ) {
+            println(data)
+            val response = client.post(NetworkModule.apiUrl("/api/verifikasi-absensi")) {
+                // Set Header Authorization
                 headers {
                     append(HttpHeaders.Authorization, "Bearer $token")
                     append(HttpHeaders.Accept, "application/json")
                 }
+                // Set Content Type ke JSON
+                contentType(ContentType.Application.Json)
+                // Kirim Object Data langsung (Ktor akan otomatis convert ke JSON)
+                setBody(data)
             }
 
             if (!response.status.isSuccess()) {
-                // Baca dan ambil pesan error dari response body
                 val errorResponse = response.bodyAsText()
+                // Parsing error handling (tetap sama seperti kode Anda)
                 val jsonError = Json.parseToJsonElement(errorResponse).jsonObject
-
-                // Ambil pesan error
-                val errorMessage = jsonError["message"]?.jsonPrimitive?.content
-
-                // Menampilkan pesan error
-                throw Exception("$errorMessage")
+                val errorMessage = jsonError["message"]?.jsonPrimitive?.content ?: "Terjadi kesalahan"
+                throw Exception(errorMessage)
             }
 
             true
 
         } catch (e: Exception) {
+            e.printStackTrace() // Cek log error di console IntelliJ
             throw e
         }
     }

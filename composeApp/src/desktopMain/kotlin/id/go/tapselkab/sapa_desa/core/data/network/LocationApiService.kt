@@ -40,7 +40,7 @@ class LocationApiServiceImpl(
             }
 
             val data: IpApiResponse = response.body()
-            println("🌍 Lokasi IP: (${data.latitude}, ${data.longitude})")
+            println("Lokasi IP: (${data.latitude}, ${data.longitude})")
 
             GeoLocation(
                 latitude = data.latitude ?: 0.0,

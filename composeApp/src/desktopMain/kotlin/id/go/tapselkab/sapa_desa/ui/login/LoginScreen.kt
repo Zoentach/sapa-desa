@@ -21,6 +21,13 @@ import kotlinproject.composeapp.generated.resources.logo_app
 import id.go.tapselkab.sapa_desa.ui.entity.LoginStatus
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinproject.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.Font
 
 @Composable
 fun LoginScreen(
@@ -64,7 +71,18 @@ fun LoginScreen(
                     contentDescription = "Logo",
                     modifier = Modifier
                         .width(500.dp)
-                        .padding(end = 32.dp)
+                        .padding(end = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "SAPA DESA".uppercase(),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF2C3E50),
+                    letterSpacing = 1.2.sp,
+                    fontFamily = FontFamily(Font(Res.font.geofish))
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
