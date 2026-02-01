@@ -27,20 +27,26 @@ fun CameraPreviewLoop() {
     }
 
     LaunchedEffect(Unit) {
+        // Cek pengaman: Jika kamera belum open, coba buka (fallback)
+        if (!CameraManager.isCameraOpen()) {
+            val idx = CameraManager.findAvailableCameraIndex()
+            CameraManager.startCapture(idx)
+        }
+
         while (CameraManager.isCameraOpen()) {
             val frame: BufferedImage? = CameraManager.readFrame()
-            frame?.let {
+            if (frame != null) {
                 SwingUtilities.invokeLater {
-                    // Resize gambar ke ukuran label
-                    val resized = it.getScaledInstance(
-                        imageLabel.width.coerceAtLeast(1), // Hindari width = 0
-                        imageLabel.height.coerceAtLeast(1),
-                        BufferedImage.SCALE_SMOOTH
-                    )
+                    // Cek size agar tidak error saat resize
+                    val w = imageLabel.width.coerceAtLeast(1)
+                    val h = imageLabel.height.coerceAtLeast(1)
+
+                    val resized =
+                        frame.getScaledInstance(w, h, BufferedImage.SCALE_FAST) // Pakai FAST agar lebih smooth
                     imageLabel.icon = ImageIcon(resized)
                 }
             }
-            delay(33L)
+            delay(33L) // ~30 FPS
         }
     }
 

@@ -22,6 +22,14 @@ import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.profile_default
 import org.jetbrains.compose.resources.painterResource
 import java.io.File
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ImagePerangkatCard(
@@ -69,14 +77,33 @@ fun ImagePerangkatCard(
                 )
             }
 
-            imageBitmap?.let {
-                Image(
-                    modifier = Modifier.size(200.dp),
-                    bitmap = it,
-                    contentDescription = "Reference Face",
-                    contentScale = ContentScale.Crop,
-                )
-            } ?: Text("Gagal memuat gambar.")
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                imageBitmap?.let {
+                    Image(
+                        modifier = Modifier.size(200.dp),
+                        bitmap = it,
+                        contentDescription = "Reference Face",
+                        contentScale = ContentScale.Crop,
+                    )
+                } ?: Text("Gagal memuat gambar.")
+
+                // --- TOMBOL REFRESH / AMBIL ULANG ---
+                IconButton(
+                    onClick = { onTakePicture() },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd) // Posisi di pojok kanan atas
+                        .padding(4.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape) // Background transparan agar terlihat jelas
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Ambil Ulang Gambar",
+                        tint = Color.White
+                    )
+                }
+            }
         }
     }
 

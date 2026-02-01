@@ -15,7 +15,7 @@ object CameraManager {
     /**
      * Mencari index kamera yang tersedia dari 0 sampai [maxIndex].
      */
-    fun findAvailableCameraIndex(maxIndex: Int = 2): Int? {
+    fun findAvailableCameraIndex(maxIndex: Int = 5): Int? {
         for (index in 0..maxIndex) {
             val cam = VideoCapture(index)
             if (cam.isOpened) {
@@ -38,28 +38,60 @@ object CameraManager {
      * Membuka kamera dengan index tertentu.
      * Secara default akan cari kamera yang tersedia jika tidak diberikan index.
      */
+//    fun startCapture(index: Int? = null): Boolean {
+//        releaseCamera()
+//        val cameraIndex = index ?: findAvailableCameraIndex() ?: return false
+//        val cam = VideoCapture(cameraIndex)
+//        return if (cam.isOpened) {
+//            camera = cam
+//            currentIndex = cameraIndex
+//            true
+//        } else {
+//            false
+//        }
+//    }
+
     fun startCapture(index: Int? = null): Boolean {
         releaseCamera()
+        // Beri jeda singkat agar OS melepaskan handle hardware
+        Thread.sleep(150)
+
         val cameraIndex = index ?: findAvailableCameraIndex() ?: return false
         val cam = VideoCapture(cameraIndex)
-        return if (cam.isOpened) {
+
+        // Kadang butuh 'warm up'. Baca satu frame kosong untuk memastikan hardware siap
+        if (cam.isOpened) {
+            val dummy = Mat()
+            cam.read(dummy)
+
             camera = cam
             currentIndex = cameraIndex
-            true
-        } else {
-            false
+            return true
         }
+        return false
     }
 
     /**
      * Membaca satu frame dari kamera untuk ditampilkan sebagai preview.
      * @return BufferedImage atau null jika gagal.
      */
+//    fun readFrame(): BufferedImage? {
+//        val cam = camera ?: return null
+//        val mat = Mat()
+//        if (cam.read(mat) && !mat.empty()) {
+//            return mat.toBufferedImage()
+//        }
+//        return null
+//    }
+
     fun readFrame(): BufferedImage? {
         val cam = camera ?: return null
         val mat = Mat()
         if (cam.read(mat) && !mat.empty()) {
-            return mat.toBufferedImage()
+            // Pastikan ukuran mat lebih besar dari 0
+            if (mat.cols() > 0 && mat.rows() > 0) {
+                return mat.toBufferedImage()
+            }
         }
         return null
     }

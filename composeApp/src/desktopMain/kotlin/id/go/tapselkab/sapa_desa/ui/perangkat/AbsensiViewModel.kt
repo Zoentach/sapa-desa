@@ -45,7 +45,7 @@ class AbsensiViewModel(
     private val _thisDay: MutableStateFlow<String> = MutableStateFlow("null")
     val thisDay = _thisDay.asStateFlow()
 
-    private val _isCameraReady:MutableStateFlow<Boolean> =  MutableStateFlow (false)
+    private val _isCameraReady: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isCameraReady = _isCameraReady.asStateFlow()
 
     fun initScreen() {
@@ -68,55 +68,64 @@ class AbsensiViewModel(
         )
     }
 
-    fun detectCamera(){
-        scope.launch{
-           try {
-               _absensiResult.value = AbsensiResult(
-                   status = AbsensiStatus.LOADING,
-                   message = "Sedang mendeteksi kamera"
-               )
-               val foundIndex = CameraManager.findAvailableCameraIndex()
-               if (foundIndex != null) {
-                   val started = CameraManager.startCapture(foundIndex)
+    // Di dalam AbsensiViewModel
+    fun setCameraReady(isReady: Boolean) {
+        _isCameraReady.value = isReady
+    }
 
-                   _isCameraReady.value = started
+    fun detectCamera() {
+        scope.launch {
+            try {
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.LOADING,
+                    message = "Sedang mendeteksi kamera"
+                )
+                val foundIndex = CameraManager.findAvailableCameraIndex()
+                if (foundIndex != null) {
+                    val started = CameraManager.startCapture(foundIndex)
 
-                   _absensiResult.value = AbsensiResult(
-                       status = AbsensiStatus.INITIAL,
-                       message = ""
-                   )
+                    _isCameraReady.value = started
 
-               } else {
-                   _absensiResult.value = AbsensiResult(
-            status = AbsensiStatus.FAILED,
-            message = "Kamera tidak ditemukan"
-                   )
-               }
-           }catch(e: Exception) {
-               _absensiResult.value = AbsensiResult(
-                   status = AbsensiStatus.FAILED,
-                   message = "Kamera tidak ditemukan"
-                          )
-           }
+                    _absensiResult.value = AbsensiResult(
+                        status = AbsensiStatus.INITIAL,
+                        message = ""
+                    )
+
+                } else {
+                    _absensiResult.value = AbsensiResult(
+                        status = AbsensiStatus.FAILED,
+                        message = "Kamera tidak ditemukan"
+                    )
+                }
+            } catch (e: Exception) {
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.FAILED,
+                    message = "Kamera tidak ditemukan"
+                )
+            }
         }
     }
 
-    fun saveImageReference(folderName:String, fileName:String){
+    fun saveImageReference(folderName: String, fileName: String) {
 
         scope.launch {
+
 
             try {
                 val saved = saveReferenceFace(folderName = folderName, fileName = fileName)
 
                 if (saved) {
-                    CameraManager.releaseCamera()
+
+//                   // harus disini karna logika savereference melakukan cek apakah kamera aktif atau tidak
+//                    CameraManager.releaseCamera()
+//                    _isCameraReady.value = false
 
                     _absensiResult.value = AbsensiResult(
                         status = AbsensiStatus.SUCCESS,
                         message = "Berhasil menyimpan foto Referensi"
                     )
                 }
-            }catch(e:Exception){
+            } catch (e: Exception) {
                 _absensiResult.value = AbsensiResult(
                     status = AbsensiStatus.FAILED,
                     message = e.message.orEmpty()
@@ -127,27 +136,31 @@ class AbsensiViewModel(
 
     }
 
-    fun saveImageAbsensi(id:Int){
+    fun saveImageAbsensi(id: Int) {
 
         scope.launch {
 
             try {
                 val timeStamp = TimeManager.getCurrentTimeMillis()
 
-                val folderName ="$id"
-                val fileName ="$timeStamp"
+                val folderName = "$id"
+                val fileName = "$timeStamp"
 
                 val saved = saveReferenceFace(folderName = folderName, fileName = fileName)
 
                 if (saved) {
-                    CameraManager.releaseCamera()
+
+                    //harus disini karna logika savereference melakukan cek apakah kamera aktif atau tidak
+                    //CameraManager.releaseCamera()
+                    //_isCameraReady.value = false
 
                     prosesAbsensi(
                         perangkatId = id,
                         timeStamp = timeStamp ?: 0
                     )
                 }
-            }catch(e:Exception){
+
+            } catch (e: Exception) {
                 _absensiResult.value = AbsensiResult(
                     status = AbsensiStatus.FAILED,
                     message = e.message.orEmpty()
@@ -160,37 +173,37 @@ class AbsensiViewModel(
 
     private suspend fun prosesAbsensi(perangkatId: Int, timeStamp: Long) {
 
-      //  scope.launch {
+        //  scope.launch {
 
-            _absensiResult.value = AbsensiResult(
-                status = AbsensiStatus.LOADING,
-                message = "Sedang memproses kehadiran ..."
-            )
+        _absensiResult.value = AbsensiResult(
+            status = AbsensiStatus.LOADING,
+            message = "Sedang memproses kehadiran ..."
+        )
 
-            try {
-                val (isMatch, confidence) = FaceRecognizerManager.cropAllFaces("$perangkatId", "$timeStamp")
+        try {
+            val (isMatch, confidence) = FaceRecognizerManager.cropAllFaces("$perangkatId", "$timeStamp")
 
-                if (isMatch) {
-                    saveAbsensi(perangkatId, timeStamp)
-                    _absensiResult.value = AbsensiResult(
-                        AbsensiStatus.SUCCESS,
-                        "Wajah cocok (Kemiripan: %.1f%%)".format(confidence)
-                    )
-                    getAbsensiByPerangkatAndMonth(perangkatId)
-                } else {
-                    _absensiResult.value = AbsensiResult(
-                        AbsensiStatus.FAILED,
-                        "Wajah tidak cocok (Kemiripan: %.1f%%)".format(confidence)
-                    )
-                }
-
-            } catch (e: Exception) {
+            if (isMatch) {
+                saveAbsensi(perangkatId, timeStamp)
+                _absensiResult.value = AbsensiResult(
+                    AbsensiStatus.SUCCESS,
+                    "Wajah cocok (Kemiripan: %.1f%%)".format(confidence)
+                )
+                getAbsensiByPerangkatAndMonth(perangkatId)
+            } else {
                 _absensiResult.value = AbsensiResult(
                     AbsensiStatus.FAILED,
-                    "Error: ${e.message}"
+                    "Wajah tidak cocok (Kemiripan: %.1f%%)".format(confidence)
                 )
             }
-     //   }
+
+        } catch (e: Exception) {
+            _absensiResult.value = AbsensiResult(
+                AbsensiStatus.FAILED,
+                "Error: ${e.message}"
+            )
+        }
+        //   }
     }
 
     private suspend fun saveAbsensi(userId: Int, timeStamp: Long) {
@@ -301,6 +314,110 @@ class AbsensiViewModel(
             }
         }
     }
+
+    fun sendAllAbsensi() {
+    scope.launch {
+        // 1. Ambil list absen yang belum terkirim (status 0)
+        // Asumsi: absensis adalah StateFlow/MutableStateFlow di ViewModel
+        val listBelumTerkirim = absensis.value.filter { it.syncStatus == 0 }
+
+        // Jika tidak ada data, langsung return atau kasih info
+        if (listBelumTerkirim.isEmpty()) {
+            _absensiResult.value = AbsensiResult(
+                status = AbsensiStatus.SUCCESS, // Atau status IDLE
+                message = "Semua data sudah terkirim."
+            )
+            return@launch
+        }
+
+        // 2. Set status LOADING dengan jumlah data
+        val totalData = listBelumTerkirim.size
+        _absensiResult.value = AbsensiResult(
+            status = AbsensiStatus.LOADING,
+            message = "Sedang mengirim $totalData absen..."
+        )
+
+        var successCount = 0
+        var failCount = 0
+
+        try {
+            // 3. Siapkan data pendukung (Lokasi & Mac) SEKALI SAJA agar efisien
+            val macAddress = getMyMacAddress().orEmpty()
+            val location = verifikasiRepo.getMyLocation() // Suspend function
+
+            // 4. Loop dan kirim satu per satu
+            for (absensi in listBelumTerkirim) {
+                try {
+                    // Siapkan referensi gambar (Logika sama seperti sendAbsensi)
+                    val gambarPagiRef = DateUtils.combineDateAndTimeToMillis(
+                        date = absensi.tanggal.orEmpty(),
+                        time = absensi.absensiPagi.orEmpty()
+                    )
+                    val gambarSoreRef = DateUtils.combineDateAndTimeToMillis(
+                        date = absensi.tanggal.orEmpty(),
+                        time = absensi.absensiSore.orEmpty()
+                    )
+
+                    // Panggil Repository
+                    val success = repository.sendAbsensiToServer(
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        macAddress = macAddress,
+                        absensi = absensi,
+                        gambarPagi = absensi.absensiPagi?.let {
+                            getFile("${absensi.perangkatId}", "$gambarPagiRef.jpg")
+                        },
+                        gambarSore = absensi.absensiSore?.let {
+                            getFile("${absensi.perangkatId}", "$gambarSoreRef.jpg")
+                        }
+                    )
+
+                    if (success) {
+                        // Update status lokal jika berhasil
+                        absensi.tanggal?.let {
+                            repository.updateAbsensiSyncStatus(absensi.perangkatId.toLong(), it, 1)
+                        }
+                        successCount++
+                    } else {
+                        failCount++
+                    }
+
+                } catch (e: Exception) {
+                    // Jika satu gagal, catat error tapi LANJUTKAN ke item berikutnya
+                    failCount++
+                    e.printStackTrace()
+                }
+            }
+
+            // 5. Refresh data lokal agar UI terupdate (menghilangkan badge merah/counter)
+            // Asumsi: mengambil data berdasarkan perangkatId dari item pertama atau user session
+            listBelumTerkirim.firstOrNull()?.let {
+                getAbsensiByPerangkatAndMonth(it.perangkatId)
+            }
+
+            // 6. Tampilkan Hasil Akhir
+            if (failCount == 0) {
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.SUCCESS,
+                    message = "Berhasil mengirim $successCount absen"
+                )
+            } else {
+                // Jika ada sebagian yang gagal
+                _absensiResult.value = AbsensiResult(
+                    status = AbsensiStatus.FAILED, // Atau WARNING jika kamu punya
+                    message = "Berhasil: $successCount, Gagal: $failCount"
+                )
+            }
+
+        } catch (e: Exception) {
+            // Error global (misal gagal dapat lokasi di awal)
+            _absensiResult.value = AbsensiResult(
+                status = AbsensiStatus.FAILED,
+                message = "Gagal memulai pengiriman: ${e.message}"
+            )
+        }
+    }
+}
 
     fun ajukanAbsensiIzin(
         perangkatId: Long,

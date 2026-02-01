@@ -7,11 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import id.go.tapselkab.sapa_desa.ui.component.gradient.gradient
 
 @Composable
 fun StatistikCard(
@@ -21,12 +21,7 @@ fun StatistikCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val gradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF4F46E5),
-            Color(0xFF3B82F6)
-        )
-    )
+
 
     Card(
         onClick = onClick,

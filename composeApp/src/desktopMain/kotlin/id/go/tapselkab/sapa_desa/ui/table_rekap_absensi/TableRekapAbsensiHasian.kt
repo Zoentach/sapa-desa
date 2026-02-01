@@ -1,15 +1,13 @@
 package id.go.tapselkab.sapa_desa.ui.table_rekap_absensi
 
-
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.*
@@ -26,250 +24,188 @@ import id.go.tapselkab.sapa_desa.ui.entity.AbsensiEntity
 import id.go.tapselkab.sapa_desa.ui.perangkat.AbsensiViewModel
 import java.time.LocalDate
 
+@OptIn(ExperimentalFoundationApi::class) // Diperlukan untuk stickyHeader
 @Composable
 fun RekapAbsensiHarian(
     perangkatId: Int,
     viewModel: AbsensiViewModel,
     modifier: Modifier = Modifier,
 ) {
-
-
-    LaunchedEffect(Unit) {
-        viewModel.initScreen()
-        viewModel.getAbsensiByPerangkatAndMonth(perangkatId = perangkatId)
-
-    }
-
+    // State Collection
     val absensis by viewModel.absensis.collectAsState()
+    val currentDateStr by viewModel.thisMonth.collectAsState()
 
-    val date by viewModel.thisMonth.collectAsState()
-
+    // Local UI State
     var selectedMonth by remember { mutableStateOf(LocalDate.now().monthValue) }
     var selectedYear by remember { mutableStateOf(LocalDate.now().year) }
-    var showUploadLampiran by remember { mutableStateOf(false) }
-    var showMonthPicker by remember {
-        mutableStateOf(false)
-    }
+    var showMonthPicker by remember { mutableStateOf(false) }
 
-
-
-    if (showUploadLampiran) {
-        UploadLampiranDialog(
-            onDismiss = {
-                showUploadLampiran = false
-            },
-            onUpload = { date, jenis, filePath, file ->
-                viewModel.ajukanAbsensiIzin(
-                    perangkatId = perangkatId.toLong(),
-                    tanggal = date,
-                    keterangan = jenis,
-                    lampiran = file
-                )
-                showUploadLampiran = false
-            }
-        )
+    // Init Data
+    LaunchedEffect(perangkatId) {
+        viewModel.initScreen()
+        viewModel.getAbsensiByPerangkatAndMonth(perangkatId = perangkatId)
     }
 
     if (showMonthPicker) {
         MonthPicker(
             currentMonth = selectedMonth,
             currentYear = selectedYear,
-            onDismiss = {
-                showMonthPicker = false
-            },
+            onDismiss = { showMonthPicker = false },
             onMonthYearSelected = { month, year ->
                 selectedMonth = month
                 selectedYear = year
-                viewModel.getAbsensiByPerangkatAndMonth(
-                    perangkatId = perangkatId,
-                    month = month,
-                    year = year
-                ) // Buat fungsi ini untuk update state
-
+                viewModel.getAbsensiByPerangkatAndMonth(perangkatId, month, year)
             }
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp)
-            .verticalScroll(rememberScrollState())
+    // --- MAIN LAYOUT ---
+    // Kita gunakan Box sebagai container utama
+    Box(
+        modifier = modifier
+            .fillMaxSize() // Mengisi seluruh ukuran window/layar
+            .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+
+        // LazyColumn menangani scroll untuk SEMUA elemen
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
         ) {
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Rekap Absen Harian : $date",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+            // 1. BAGIAN JUDUL & TOMBOL (Akan ikut ter-scroll ke atas)
+            item {
+                TopBarSection(
+                    dateString = currentDateStr,
+                    onCalendarClick = { showMonthPicker = true },
+                    onExportClick = { viewModel.exportAbsensi(absensis) }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
-                IconButton(
-                    onClick = {
-                        showMonthPicker = true
-                    },
-                    content = {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null
-                        )
-                    }
+            // 2. HEADER TABEL (STICKY/MENEMPEL)
+            // stickyHeader membuat header ini tetap terlihat di atas saat list di scroll
+            stickyHeader {
+                // Penting: Beri background color agar tulisan list tidak terlihat "tembus" di belakang header
+                Box(modifier = Modifier.background(MaterialTheme.colors.surface)) {
+                    HeaderTableAbsensi()
+                }
+            }
+
+            // 3. ISI TABEL (DATA)
+            items(absensis) { item ->
+                BodyTableAbsensi(
+                    absensi = item,
+                    onSendAbsensi = { viewModel.sendAbsensi(it) }
                 )
             }
-            OutlinedButton(
-                onClick = {
-                    viewModel.exportAbsensi(absensis)
-                },
-                content = {
-                    Text("Ekspor")
-                },
-                enabled = false
-            )
+
+            // Spacer bawah agar data terakhir tidak tertutup navigation bar atau border bawah
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
-    Spacer(Modifier.height(6.dp))
-    HeaderTableAbsensi(
-        modifier = modifier
-    )
-    absensis.forEach {
-        BodyTableAbsensi(
-            absensi = it,
-            onSendabsensi = { absensi ->
-                viewModel.sendAbsensi(absensi)
-            },
-            modifier = modifier
-        )
+}
+
+// --- Komponen Pendukung (Helper) ---
+
+@Composable
+private fun TopBarSection(
+    dateString: String,
+    onCalendarClick: () -> Unit,
+    onExportClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Rekap Absen : $dateString",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            IconButton(onClick = onCalendarClick) {
+                Icon(Icons.Default.CalendarMonth, contentDescription = "Pilih Bulan")
+            }
+        }
+        OutlinedButton(
+            onClick = onExportClick,
+            enabled = false
+        ) {
+            Text("Ekspor")
+        }
     }
 }
 
 @Composable
-fun HeaderTableAbsensi(
-    modifier: Modifier = Modifier
-) {
+fun HeaderTableAbsensi() {
     Row(
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
+            // Border hanya di header atau di container utama, sesuaikan selera
+            .border(1.dp, Color.Black)
     ) {
-        Text(
-            modifier = Modifier
-                .weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = "Tanggal",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = "Pagi",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = "Terlambat",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = "Sore",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = "Pulang Cepat",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = "Status",
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
+        TableCell(text = "Tanggal", isHeader = true)
+        TableCell(text = "Pagi", isHeader = true)
+        TableCell(text = "Terlambat", isHeader = true)
+        TableCell(text = "Sore", isHeader = true)
+        TableCell(text = "Plg Cepat", isHeader = true)
+        TableCell(text = "Status", isHeader = true)
     }
 }
 
 @Composable
 fun BodyTableAbsensi(
     absensi: AbsensiEntity,
-    onSendabsensi: (absensi: AbsensiEntity) -> Unit,
-    modifier: Modifier = Modifier
+    onSendAbsensi: (AbsensiEntity) -> Unit
 ) {
+    // Menggunakan border bawah saja untuk baris data agar lebih rapi (opsional)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(width = 1.dp, color = Color.Black) // Border kotak per baris
+    ) {
+        TableCell(text = absensi.tanggal.orEmpty())
+        TableCell(text = absensi.absensiPagi.orEmpty())
+        TableCell(text = formatDuration(absensi.keterlambatan))
+        TableCell(text = absensi.absensiSore.orEmpty())
+        TableCell(text = formatDuration(absensi.pulangCepat))
 
-    Row(modifier = modifier) {
-
-        Text(
-            modifier = Modifier
-                .weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = absensi.tanggal.orEmpty(),
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = absensi.absensiPagi.orEmpty(),
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = if (absensi.keterlambatan == null) "~" else "${absensi.keterlambatan} Menit",
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = absensi.absensiSore.orEmpty(),
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f)
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = if (absensi.pulangCepat == null) "~" else "${absensi.pulangCepat} Menit",
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            modifier = Modifier.weight(1f)
-                .clickable {
-                    onSendabsensi(absensi)
-                }
-                .border(2.dp, Color.Black)
-                .padding(6.dp),
-            text = if (absensi.syncStatus == 0) "Kirim" else absensi.keterangan.orEmpty(),
-            textAlign = TextAlign.Center,
-            color = if (absensi.syncStatus == 0) Color.Blue else Color.Green,
-            fontWeight = FontWeight.ExtraBold
+        val isNotSynced = absensi.syncStatus == 0
+        TableCell(
+            text = if (isNotSynced) "Belum Terkirim" else absensi.keterangan.orEmpty(),
+            textColor = if (isNotSynced) Color.Blue else Color.Green,
+            isBold = true,
+           // modifier = Modifier.clickable { onSendAbsensi(absensi) }
         )
     }
+}
 
+@Composable
+fun RowScope.TableCell(
+    text: String,
+    modifier: Modifier = Modifier,
+    isHeader: Boolean = false,
+    textColor: Color = Color.Unspecified,
+    isBold: Boolean = false
+) {
+    Text(
+        text = text,
+        color = textColor,
+        fontWeight = if (isHeader || isBold) FontWeight.Bold else FontWeight.Normal,
+        textAlign = TextAlign.Center,
+        fontSize = 12.sp,
+        modifier = modifier
+            .weight(1f)
+            .padding(8.dp) // Padding text di dalam sel
+            .border(0.dp, Color.Transparent) // Trik agar layouting weight bekerja sempurna
+    )
+    // Divider Vertikal (Garis pemisah antar kolom)
+    Spacer(modifier = Modifier.width(1.dp).fillMaxHeight().background(Color.Black))
+}
+
+private fun formatDuration(minutes: Int?): String {
+    return if (minutes == null || minutes == 0) "~" else "$minutes Menit"
 }
